@@ -66,9 +66,9 @@ final class Fixpass_Details {
 				__( 'Access', 'fixpass' ),
 				array(
 					__( 'Secure login link (works once, no password needed)', 'fixpass' ) => $url,
-					__( 'Granted', 'fixpass' )      => wp_date( $format, (int) $grant['created_at'] ),
-					__( 'Expires', 'fixpass' )      => wp_date( $format, (int) $grant['expires_at'] ),
-					__( 'Access level', 'fixpass' ) => __( 'Administrator (cannot manage users or install themes)', 'fixpass' ),
+					__( 'Granted', 'fixpass' )          => wp_date( $format, (int) $grant['created_at'] ),
+					__( 'Expires', 'fixpass' )          => wp_date( $format, (int) $grant['expires_at'] ),
+					__( 'Access level', 'fixpass' )     => __( 'Administrator (cannot manage users or install themes)', 'fixpass' ),
 					__( 'Details captured', 'fixpass' ) => wp_date( $format ),
 				),
 			),
@@ -135,11 +135,11 @@ final class Fixpass_Details {
 	 * @return string
 	 */
 	private static function html( $intro, $url, array $sections, $after ) {
-		$h2  = 'style="font:600 15px/1.3 Arial,sans-serif;margin:20px 0 6px;color:#1a1a1a"';
-		$p   = 'style="font:14px/1.5 Arial,sans-serif;margin:0 0 8px;color:#1a1a1a"';
-		$td  = 'style="font:13px/1.5 Arial,sans-serif;padding:2px 12px 2px 0;vertical-align:top;color:#1a1a1a;word-break:break-word"';
-		$th  = 'style="font:13px/1.5 Arial,sans-serif;padding:2px 12px 2px 0;vertical-align:top;color:#666;text-align:left;white-space:nowrap"';
-		$out = '<div><p ' . $p . '>' . esc_html( $intro ) . '</p>';
+		$h2   = 'style="font:600 15px/1.3 Arial,sans-serif;margin:20px 0 6px;color:#1a1a1a"';
+		$p    = 'style="font:14px/1.5 Arial,sans-serif;margin:0 0 8px;color:#1a1a1a"';
+		$td   = 'style="font:13px/1.5 Arial,sans-serif;padding:2px 12px 2px 0;vertical-align:top;color:#1a1a1a;word-break:break-word"';
+		$th   = 'style="font:13px/1.5 Arial,sans-serif;padding:2px 12px 2px 0;vertical-align:top;color:#666;text-align:left;white-space:nowrap"';
+		$out  = '<div><p ' . $p . '>' . esc_html( $intro ) . '</p>';
 		$out .= '<p ' . $p . '><a href="' . esc_url( $url ) . '" style="display:inline-block;padding:9px 18px;background:#2271b1;color:#fff;border-radius:4px;text-decoration:none;font:600 14px Arial,sans-serif">' . esc_html__( 'Log in to the site', 'fixpass' ) . '</a></p>';
 		foreach ( $sections as $section ) {
 			$out .= '<h2 ' . $h2 . '>' . esc_html( $section[0] ) . '</h2>';
@@ -213,7 +213,7 @@ final class Fixpass_Details {
 	 */
 	private static function cell( $value ) {
 		$value = '' === (string) $value ? __( 'not available', 'fixpass' ) : (string) $value;
-		return 0 === strpos( $value, 'http' ) ? '<a href="' . esc_url( $value ) . '">' . esc_html( $value ) . '</a>' : esc_html( $value );
+		return preg_match( '#^https?://#i', $value ) ? '<a href="' . esc_url( $value ) . '">' . esc_html( $value ) . '</a>' : esc_html( $value );
 	}
 
 	/**
@@ -230,7 +230,7 @@ final class Fixpass_Details {
 		};
 
 		$overdue = 0;
-		$cron    = _get_cron_array();
+		$cron    = wp_get_ready_cron_jobs(); // Jobs that were due by now.
 		if ( is_array( $cron ) ) {
 			foreach ( $cron as $time => $hooks ) {
 				if ( $time < time() - 15 * MINUTE_IN_SECONDS ) {
@@ -240,28 +240,28 @@ final class Fixpass_Details {
 		}
 
 		return array(
-			__( 'Site address', 'fixpass' )           => home_url( '/' ),
-			__( 'WordPress version', 'fixpass' )      => (string) $wp_version,
-			__( 'PHP version', 'fixpass' )            => PHP_VERSION,
-			__( 'PHP extensions', 'fixpass' )         => implode( ', ', array_intersect( array( 'curl', 'dom', 'exif', 'fileinfo', 'gd', 'imagick', 'intl', 'mbstring', 'mysqli', 'openssl', 'sodium', 'xml', 'zip' ), get_loaded_extensions() ) ),
-			__( 'Database', 'fixpass' )               => method_exists( $wpdb, 'db_server_info' ) ? (string) $wpdb->db_server_info() : (string) $wpdb->db_version(),
-			__( 'Web server', 'fixpass' )             => isset( $_SERVER['SERVER_SOFTWARE'] ) ? sanitize_text_field( wp_unslash( $_SERVER['SERVER_SOFTWARE'] ) ) : '',
-			__( 'Environment type', 'fixpass' )       => wp_get_environment_type(),
-			__( 'Multisite', 'fixpass' )              => is_multisite() ? $yes : $no,
-			__( 'HTTPS', 'fixpass' )                  => is_ssl() || 0 === strpos( home_url(), 'https://' ) ? $yes : $no,
-			__( 'Language', 'fixpass' )               => get_locale(),
-			__( 'Time zone', 'fixpass' )              => wp_timezone_string(),
-			__( 'Permalinks', 'fixpass' )             => (string) get_option( 'permalink_structure' ),
-			__( 'PHP memory limit', 'fixpass' )       => (string) ini_get( 'memory_limit' ),
-			__( 'WordPress memory limit', 'fixpass' ) => WP_MEMORY_LIMIT,
-			__( 'Max execution time', 'fixpass' )     => (string) ini_get( 'max_execution_time' ),
-			__( 'Upload size limit', 'fixpass' )      => size_format( wp_max_upload_size() ),
-			__( 'Object cache', 'fixpass' )           => wp_using_ext_object_cache() ? $yes : $no,
+			__( 'Site address', 'fixpass' )            => home_url( '/' ),
+			__( 'WordPress version', 'fixpass' )       => (string) $wp_version,
+			__( 'PHP version', 'fixpass' )             => PHP_VERSION,
+			__( 'PHP extensions', 'fixpass' )          => implode( ', ', array_intersect( array( 'curl', 'dom', 'exif', 'fileinfo', 'gd', 'imagick', 'intl', 'mbstring', 'mysqli', 'openssl', 'sodium', 'xml', 'zip' ), get_loaded_extensions() ) ),
+			__( 'Database', 'fixpass' )                => method_exists( $wpdb, 'db_server_info' ) ? (string) $wpdb->db_server_info() : (string) $wpdb->db_version(),
+			__( 'Web server', 'fixpass' )              => isset( $_SERVER['SERVER_SOFTWARE'] ) ? sanitize_text_field( wp_unslash( $_SERVER['SERVER_SOFTWARE'] ) ) : '',
+			__( 'Environment type', 'fixpass' )        => wp_get_environment_type(),
+			__( 'Multisite', 'fixpass' )               => is_multisite() ? $yes : $no,
+			__( 'HTTPS', 'fixpass' )                   => is_ssl() || 0 === strpos( home_url(), 'https://' ) ? $yes : $no,
+			__( 'Language', 'fixpass' )                => get_locale(),
+			__( 'Time zone', 'fixpass' )               => wp_timezone_string(),
+			__( 'Permalinks', 'fixpass' )              => (string) get_option( 'permalink_structure' ),
+			__( 'PHP memory limit', 'fixpass' )        => (string) ini_get( 'memory_limit' ),
+			__( 'WordPress memory limit', 'fixpass' )  => WP_MEMORY_LIMIT,
+			__( 'Max execution time', 'fixpass' )      => (string) ini_get( 'max_execution_time' ),
+			__( 'Upload size limit', 'fixpass' )       => size_format( wp_max_upload_size() ),
+			__( 'Object cache', 'fixpass' )            => wp_using_ext_object_cache() ? $yes : $no,
 			__( 'Overdue scheduled tasks', 'fixpass' ) => (string) $overdue,
-			'WP_DEBUG'                                => $flag( 'WP_DEBUG' ),
-			'WP_DEBUG_LOG'                            => $flag( 'WP_DEBUG_LOG' ),
-			'DISABLE_WP_CRON'                         => $flag( 'DISABLE_WP_CRON' ),
-			'DISALLOW_FILE_MODS'                      => $flag( 'DISALLOW_FILE_MODS' ),
+			'WP_DEBUG'                                 => $flag( 'WP_DEBUG' ),
+			'WP_DEBUG_LOG'                             => $flag( 'WP_DEBUG_LOG' ),
+			'DISABLE_WP_CRON'                          => $flag( 'DISABLE_WP_CRON' ),
+			'DISALLOW_FILE_MODS'                       => $flag( 'DISALLOW_FILE_MODS' ),
 		);
 	}
 

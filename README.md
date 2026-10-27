@@ -19,13 +19,13 @@ version released on WordPress.org (plugin slug `fixpass`); `readme.txt` is the W
 | Path | What it does |
 |---|---|
 | `fixpass.php` | Plugin header and loader |
-| `includes/class-access.php` | Support account, single-use link, expiry, cleanup, capability limits |
-| `includes/class-details.php` | Captures the site context and builds the support details (HTML and plain text) |
-| `includes/class-admin.php` | Guided setup and the support dashboard |
-| `includes/class-docs.php` | The in-plugin documentation |
-| `includes/class-network.php` | Multisite: the Network Admin overview |
-| `includes/class-plugin.php` | Bootstrap, activation redirect, self-removal |
-| `includes/class-redactor.php` | Removes secrets and email addresses from the owner's description |
+| `includes/class-fixpass-access.php` | Support account, single-use link, expiry, cleanup, capability limits |
+| `includes/class-fixpass-details.php` | Captures the site context and builds the support details (HTML and plain text) |
+| `includes/class-fixpass-admin.php` | Guided setup and the support dashboard |
+| `includes/class-fixpass-docs.php` | The in-plugin documentation |
+| `includes/class-fixpass-network.php` | Multisite: the Network Admin overview |
+| `includes/class-fixpass-plugin.php` | Bootstrap, activation redirect, self-removal |
+| `includes/class-fixpass-redactor.php` | Removes secrets and email addresses from the owner's description |
 | `assets/` | Plain JavaScript and CSS. There is no build step: what you see is what ships. |
 | `uninstall.php` | Deletes the support account and everything Fixpass stored |
 

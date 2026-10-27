@@ -166,7 +166,7 @@ final class Fixpass_Docs {
 		self::h3( __( 'What is never captured', 'fixpass' ) );
 		self::p( __( 'Passwords, keys and salts, the contents of wp-config.php or any other file, the debug log, users and their email addresses, posts, pages, orders, form entries or any customer data. Fixpass also reads no browser data from you or your visitors.', 'fixpass' ) );
 		self::h3( __( 'Where it is shown', 'fixpass' ) );
-		self::p( __( 'It goes into the details you copy, and support sees the same information, read live, on the Support session page after logging in. Nothing is saved on your site except your description, which is kept with the access and deleted when access ends.', 'fixpass' ) );
+		self::p( __( 'It goes into the details you copy, and support sees the same information, read live, on the Support session page after logging in. Nothing is saved on your site except the access itself and your description, which are deleted when access ends.', 'fixpass' ) );
 		self::p( __( 'Secrets in your description (such as text that looks like a password, key or token) are replaced with [redacted] and email addresses are shortened, as a safety net. Still, don’t write passwords in it.', 'fixpass' ) );
 	}
 
@@ -200,7 +200,6 @@ final class Fixpass_Docs {
 				__( 'Opening the link shows a page with a “Log in as support” button. Only pressing that button uses the link up. Email security scanners that open links automatically cannot use it.', 'fixpass' ),
 				__( 'After it is used, it never works again. A link also stops working when access ends or when you make a new link.', 'fixpass' ),
 				__( 'If support needs to log in again, click “Copy new login link” (just the link) or “Copy full message with a new link” on the Fixpass page. The old link stops working.', 'fixpass' ),
-				__( 'A wrong or used link is counted: after 10 from one address in an hour, that address is blocked for the hour.', 'fixpass' ),
 			)
 		);
 		self::h3( __( 'Staying in control', 'fixpass' ) );
@@ -242,8 +241,8 @@ final class Fixpass_Docs {
 		self::table(
 			array(
 				__( 'Copy full message with a new link', 'fixpass' ) => __( 'Makes a new link and shows the same screen as after giving access, with the full message and a preview. The details are captured again, so they are current.', 'fixpass' ),
-				__( 'Copy new login link', 'fixpass' )               => __( 'Makes a new link and shows only a “Copy login link” button. Use it when support already has the details and just needs another way in, for example because the first link was used.', 'fixpass' ),
-				__( 'End access now', 'fixpass' )                    => __( 'Ends access at once and deletes the support account.', 'fixpass' ),
+				__( 'Copy new login link', 'fixpass' ) => __( 'Makes a new link and shows only a “Copy login link” button. Use it when support already has the details and just needs another way in, for example because the first link was used.', 'fixpass' ),
+				__( 'End access now', 'fixpass' )      => __( 'Ends access at once and deletes the support account.', 'fixpass' ),
 			)
 		);
 		self::h3( __( 'If copying fails', 'fixpass' ) );
@@ -295,7 +294,7 @@ final class Fixpass_Docs {
 		self::h3( __( 'Even if the scheduled task does not run', 'fixpass' ) );
 		self::p( __( 'WordPress runs scheduled tasks when someone visits. Fixpass does not depend on that for safety: the support account is treated as logged out the moment its time is up, and Fixpass checks the end time on every page load and removes the account as soon as it can.', 'fixpass' ) );
 		self::h3( __( 'Delete Fixpass when access ends (optional)', 'fixpass' ) );
-		self::p( __( 'If you tick this when giving access, one minute after access ends Fixpass deactivates itself and deletes itself, which also removes everything it stored. On hosts where WordPress needs FTP details to delete plugins, Fixpass stays installed but deactivated. On a multisite network, see the Multisite tab.', 'fixpass' ) );
+		self::p( __( 'If you tick this when giving access, shortly after access ends (WordPress runs the task on the next visit to your site) Fixpass deactivates itself and deletes itself, which also removes everything it stored. On hosts where WordPress needs FTP details to delete plugins, Fixpass stays installed but deactivated. On a multisite network, see the Multisite tab.', 'fixpass' ) );
 		self::h3( __( 'Uninstalling', 'fixpass' ) );
 		self::p( __( 'Deleting Fixpass from the Plugins screen removes any support account and everything Fixpass stored. See the “For developers” tab for the full list.', 'fixpass' ) );
 	}
@@ -311,7 +310,7 @@ final class Fixpass_Docs {
 				__( 'There is no password to leak. The support account’s password is random and password login is blocked for it.', 'fixpass' ),
 				__( 'The login link is a random 256-bit code; only its SHA-256 hash is stored. It cannot be guessed, is used once, and dies with the access.', 'fixpass' ),
 				__( 'Using the link takes a button press with a one-time check, so automatic link scanners cannot use it.', 'fixpass' ),
-				__( 'Guessing is rate-limited: 10 wrong links per address per hour.', 'fixpass' ),
+				__( 'Guessing is not a realistic attack: the code has 2^256 possibilities, and a wrong code reveals nothing.', 'fixpass' ),
 				__( 'Support’s login cookie never outlasts the access.', 'fixpass' ),
 				__( 'Support cannot manage users, install or delete themes, or remove Fixpass, so they cannot leave a back door.', 'fixpass' ),
 				__( 'Only administrators can give access or see the Fixpass setup. Every action is protected by a security check.', 'fixpass' ),
@@ -377,14 +376,14 @@ final class Fixpass_Docs {
 	private static function tab_faq() {
 		self::h( __( 'Troubleshooting', 'fixpass' ) );
 		$faq = array(
-			__( 'Support says the link does not work.', 'fixpass' )             => __( 'Links work once. The link may have been opened and used already, replaced by a newer one, or access may have ended. On the Fixpass page, click “Copy full message with a new link” and send the new details. If the page says access has ended, give access again.', 'fixpass' ),
-			__( 'The Site Health section is missing.', 'fixpass' )              => __( 'Fixpass only reads the result WordPress stored. Open Tools → Site Health once so WordPress runs its tests, then copy the details again.', 'fixpass' ),
-			__( 'Copying failed.', 'fixpass' )                                   => __( 'Your browser may block the clipboard on pages that are not HTTPS. For the full message, open “Review exactly what the full message contains” and copy the text from the preview. If the “Copy login link” button fails, allow clipboard access for the page and press it again, or open the site admin over HTTPS.', 'fixpass' ),
-			__( 'I did not get the “support logged in” email.', 'fixpass' )      => __( 'The email is sent to the site’s administration email address (Settings → General). If your site cannot send email, the Fixpass page still shows when support is logged in.', 'fixpass' ),
+			__( 'Support says the link does not work.', 'fixpass' ) => __( 'Links work once. The link may have been opened and used already, replaced by a newer one, or access may have ended. On the Fixpass page, click “Copy full message with a new link” and send the new details. If the page says access has ended, give access again.', 'fixpass' ),
+			__( 'The Site Health section is missing.', 'fixpass' ) => __( 'Fixpass only reads the result WordPress stored. Open Tools → Site Health once so WordPress runs its tests, then copy the details again.', 'fixpass' ),
+			__( 'Copying failed.', 'fixpass' )        => __( 'Your browser may block the clipboard on pages that are not HTTPS. For the full message, open “Review exactly what the full message contains” and copy the text from the preview. If the “Copy login link” button fails, allow clipboard access for the page and press it again, or open the site admin over HTTPS.', 'fixpass' ),
+			__( 'I did not get the “support logged in” email.', 'fixpass' ) => __( 'The email is sent to the site’s administration email address (Settings → General). If your site cannot send email, the Fixpass page still shows when support is logged in.', 'fixpass' ),
 			__( 'The support account is still on the Users screen.', 'fixpass' ) => __( 'It is deleted the moment access ends. If access just ended, reload. If it stays, delete it yourself: that is safe. If scheduled tasks are disabled on your site, load any page of the site once and Fixpass will remove it.', 'fixpass' ),
-			__( 'I cannot start access.', 'fixpass' )                            => __( 'Only one access can be on at a time. End the current one first. If you see “already being created”, wait a few seconds and reload.', 'fixpass' ),
-			__( 'I do not see Fixpass in the menu (multisite).', 'fixpass' )     => __( 'The network admin may have limited giving support access to super admins. Ask a super admin, or ask them to allow site administrators in Network Admin → Fixpass.', 'fixpass' ),
-			__( 'Support cannot install a plugin or theme.', 'fixpass' )         => __( 'Support can never install themes. On multisite they cannot install plugins either. Install it yourself, or ask support to tell you what they need.', 'fixpass' ),
+			__( 'I cannot start access.', 'fixpass' ) => __( 'Only one access can be on at a time. End the current one first. If you see “already being created”, wait a few seconds and reload.', 'fixpass' ),
+			__( 'I do not see Fixpass in the menu (multisite).', 'fixpass' ) => __( 'The network admin may have limited giving support access to super admins. Ask a super admin, or ask them to allow site administrators in Network Admin → Fixpass.', 'fixpass' ),
+			__( 'Support cannot install a plugin or theme.', 'fixpass' ) => __( 'Support can never install themes. On multisite they cannot install plugins either. Install it yourself, or ask support to tell you what they need.', 'fixpass' ),
 		);
 		foreach ( $faq as $question => $answer ) {
 			echo '<h3>' . esc_html( $question ) . '</h3><p>' . esc_html( $answer ) . '</p>';
@@ -402,13 +401,14 @@ final class Fixpass_Docs {
 				'fixpass_access'                      => __( 'Option, per site: the current access (account ID, hash of the login link, times, status, your description). Removed when access ends.', 'fixpass' ),
 				'fixpass_ended'                       => __( 'Option, per site: when and how the last access ended, to show on the setup screen. Removed when new access is given.', 'fixpass' ),
 				'fixpass_used_{hash}'                 => __( 'Option, per site: marks a login link as used. Removed when access ends.', 'fixpass' ),
+				'fixpass_activation_notice'           => __( 'Transient, 10 minutes: set when Fixpass is activated, so a one-time notice shows where to find it.', 'fixpass' ),
 				'fixpass_creating'                    => __( 'Option, per site: a short lock while access is being created.', 'fixpass' ),
 				'fixpass_support (user meta)'         => __( 'On the support account: the ID of the site it is for. The account is deleted when access ends.', 'fixpass' ),
 				'fixpass_expire, fixpass_self_remove' => __( 'Scheduled tasks: end access, and delete Fixpass when asked.', 'fixpass' ),
 				'fixpass_network_sites, fixpass_allow_site_admins' => __( 'Multisite only, network options: the sites with access now, and whether site administrators may give access.', 'fixpass' ),
 			)
 		);
-		self::p( __( 'Fixpass creates no database tables, adds no files outside its own folder, and has no settings page: there is nothing to configure.', 'fixpass' ) );
+		self::p( __( 'Fixpass creates no database tables and adds no files outside its own folder. There is nothing to configure; on multisite the only setting is the network option below.', 'fixpass' ) );
 		self::h3( __( 'Capabilities', 'fixpass' ) );
 		self::p( __( 'The owner screens need manage_options (and, on multisite, the network setting that lets site administrators give access). The support account is an Administrator with these capabilities removed: create_users, promote_users, add_users, edit_users, delete_users, remove_users, list_users, manage_network_users, install_themes, delete_themes. It also cannot deactivate or delete Fixpass.', 'fixpass' ) );
 		self::h3( __( 'Login link', 'fixpass' ) );

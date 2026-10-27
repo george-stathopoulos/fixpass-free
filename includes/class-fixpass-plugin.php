@@ -18,9 +18,9 @@ final class Fixpass_Plugin {
 	const SELF_REMOVE = 'fixpass_self_remove';
 
 	/**
-	 * Transient set on activation, so the next admin page opens Fixpass.
+	 * Transient set on activation, so a short notice shows once.
 	 */
-	const REDIRECT = 'fixpass_activation_redirect';
+	const NOTICE = 'fixpass_activation_notice';
 
 	/**
 	 * Register hooks.
@@ -33,22 +33,28 @@ final class Fixpass_Plugin {
 		}
 
 		add_action( self::SELF_REMOVE, array( __CLASS__, 'self_remove' ) );
-		add_action( 'admin_init', array( __CLASS__, 'activation_redirect' ) );
+		add_action( 'admin_notices', array( __CLASS__, 'activation_notice' ) );
 	}
 
 	/**
-	 * Right after activation, open Fixpass's page. Not for bulk activation, AJAX or WP-CLI.
+	 * Right after activation, say once where Fixpass is. A notice rather than a redirect, so
+	 * activating Fixpass never takes you away from the page you were on.
 	 */
-	public static function activation_redirect() {
-		if ( ! get_transient( self::REDIRECT ) ) {
+	public static function activation_notice() {
+		if ( ! get_transient( self::NOTICE ) || ! Fixpass_Access::can_give() ) {
 			return;
 		}
-		delete_transient( self::REDIRECT );
-		if ( isset( $_GET['activate-multi'] ) || wp_doing_ajax() || ( defined( 'WP_CLI' ) && WP_CLI ) || ! Fixpass_Access::can_give() ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- only checks whether this was a bulk activation.
-			return;
-		}
-		wp_safe_redirect( admin_url( 'admin.php?page=' . Fixpass_Admin::SLUG ) );
-		exit;
+		delete_transient( self::NOTICE );
+		echo '<div class="notice notice-success is-dismissible"><p>' . wp_kses(
+			sprintf(
+				/* translators: %s: link to the Fixpass page */
+				__( 'Fixpass is ready. When you need help with your site, %s.', 'fixpass' ),
+				'<a href="' . esc_url( admin_url( 'admin.php?page=' . Fixpass_Admin::SLUG ) ) . '">' . esc_html__( 'open Fixpass to give your support team temporary access', 'fixpass' ) . '</a>'
+			),
+			array(
+				'a' => array( 'href' => true ),
+			)
+		) . '</p></div>';
 	}
 
 	/**
@@ -85,13 +91,14 @@ final class Fixpass_Plugin {
 	 */
 	private static function delete_site_data() {
 		global $wpdb;
-		$used = $wpdb->get_col( $wpdb->prepare( 'SELECT option_name FROM ' . $wpdb->options . ' WHERE option_name LIKE %s', $wpdb->esc_like( 'fixpass_used_' ) . '%' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$used = $wpdb->get_col( $wpdb->prepare( 'SELECT option_name FROM ' . $wpdb->options . ' WHERE option_name LIKE %s', $wpdb->esc_like( 'fixpass_used_' ) . '%' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- only the options table name is concatenated.
 		foreach ( (array) $used as $option ) {
 			delete_option( $option );
 		}
 		foreach ( array( Fixpass_Access::OPTION, Fixpass_Access::ENDED, 'fixpass_creating' ) as $option ) {
 			delete_option( $option );
 		}
+		delete_transient( self::NOTICE );
 		foreach ( array( Fixpass_Access::EXPIRE, self::SELF_REMOVE ) as $hook ) {
 			wp_clear_scheduled_hook( $hook );
 		}
@@ -104,7 +111,7 @@ final class Fixpass_Plugin {
 	 */
 	public static function activate( $network_wide = false ) {
 		if ( ! $network_wide ) {
-			set_transient( self::REDIRECT, 1, 30 );
+			set_transient( self::NOTICE, 1, 10 * MINUTE_IN_SECONDS );
 		}
 	}
 

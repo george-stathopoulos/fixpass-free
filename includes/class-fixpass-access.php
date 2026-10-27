@@ -262,7 +262,7 @@ final class Fixpass_Access {
 					'created_by' => get_current_user_id(),
 					'cleanup'    => (bool) $cleanup && self::can_self_remove(),
 					'status'     => 'waiting',
-					'note'       => Fixpass_Redactor::text( substr( sanitize_textarea_field( (string) $note ), 0, 1000 ) ),
+					'note'       => Fixpass_Redactor::text( mb_substr( sanitize_textarea_field( (string) $note ), 0, 1000 ) ),
 				),
 				true
 			);
@@ -316,6 +316,9 @@ final class Fixpass_Access {
 		$grant = self::active();
 		if ( ! $grant ) {
 			return new WP_Error( 'fixpass_inactive', __( 'Support access is not active.', 'fixpass' ) );
+		}
+		if ( ! empty( $grant['token_hash'] ) ) {
+			delete_option( self::used_option( $grant['token_hash'] ) ); // The old link is replaced, so it needs no marker.
 		}
 		$secret              = bin2hex( random_bytes( 32 ) ); // 256 bits; only its hash is stored.
 		$grant['token_hash'] = hash( 'sha256', $secret );
@@ -472,14 +475,7 @@ final class Fixpass_Access {
 	public static function login_screen() {
 		$token = isset( $_REQUEST['token'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['token'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- the single-use secret is the credential.
 		$error = null;
-		// Slow down guessing: 10 wrong links per address per hour.
-		$ip       = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
-		$tries    = 'fixpass_fail_' . md5( $ip );
-		$failures = (int) get_transient( $tries );
-		$grant    = $failures >= 10 ? new WP_Error( 'fixpass_rate', __( 'Too many invalid support login links from your address. Try again in an hour, or ask the site owner for a new link.', 'fixpass' ) ) : self::grant_for_token( $token );
-		if ( is_wp_error( $grant ) && 'fixpass_link' === $grant->get_error_code() ) {
-			set_transient( $tries, $failures + 1, HOUR_IN_SECONDS );
-		}
+		$grant = self::grant_for_token( $token );
 
 		if ( is_wp_error( $grant ) ) {
 			$error = $grant;

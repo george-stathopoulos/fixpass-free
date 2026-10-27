@@ -1,7 +1,7 @@
 === Fixpass ===
 Contributors: mindanticipation
 Tags: support, temporary login, remote access, troubleshooting, single-use link
-Requires at least: 6.0
+Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
 Stable tag: 1.0.0
@@ -39,7 +39,7 @@ Full documentation is built in: open Fixpass → Documentation in your admin. It
 * Support can't manage users, install or delete themes, or remove Fixpass.
 * However access ends, the support account is deleted.
 * You get an email when support logs in.
-* Failed link attempts are rate-limited.
+* Support's login cookie never outlasts the access.
 
 = Privacy =
 
@@ -50,9 +50,9 @@ Fixpass stores only the access itself and your description of the problem, and d
 == Installation ==
 
 1. Install and activate Fixpass from Plugins → Add New, or upload the zip.
-2. Fixpass opens its guided setup. Click Start.
+2. Open Fixpass in the admin menu. Click Start.
 3. Describe the problem, choose how long access lasts, and click "Give access".
-4. Click "Copy support details" and send them to your support team.
+4. Click "Copy full message" (or "Copy login link") and send it to your support team.
 
 == Frequently Asked Questions ==
 

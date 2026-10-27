@@ -130,7 +130,7 @@ final class Fixpass_Admin {
 				self::$result = self::copy_result( $grant, $url );
 			}
 		} elseif ( 'link_only' === $do ) {
-			$url = Fixpass_Access::new_link();
+			$url          = Fixpass_Access::new_link();
 			self::$result = is_wp_error( $url ) ? array( 'error' => $url ) : array(
 				'url'       => $url,
 				'only_link' => true,
@@ -466,22 +466,22 @@ final class Fixpass_Admin {
 	 */
 	private static function dashboard_tags() {
 		return array(
-			'h3'    => array(),
-			'p'     => array(),
-			'ul'    => array( 'class' => true ),
-			'li'    => array(),
-			'a'     => array( 'href' => true ),
-			'table' => array( 'class' => true ),
-			'tbody' => array(),
-			'tr'    => array(),
+			'h3'      => array(),
+			'p'       => array(),
+			'ul'      => array( 'class' => true ),
+			'li'      => array(),
+			'a'       => array( 'href' => true ),
+			'table'   => array( 'class' => true ),
+			'tbody'   => array(),
+			'tr'      => array(),
 			'details' => array(
 				'class' => true,
 				'open'  => true,
 			),
 			'summary' => array(),
 			'span'    => array( 'class' => true ),
-			'th'    => array( 'scope' => true ),
-			'td'    => array(),
+			'th'      => array( 'scope' => true ),
+			'td'      => array(),
 		);
 	}
 
@@ -546,7 +546,9 @@ final class Fixpass_Admin {
 	 * @return array
 	 */
 	public static function users_column( $columns ) {
-		$columns['fixpass'] = __( 'Fixpass', 'fixpass' );
+		if ( Fixpass_Access::get() ) {
+			$columns['fixpass'] = __( 'Fixpass', 'fixpass' );
+		}
 		return $columns;
 	}
 

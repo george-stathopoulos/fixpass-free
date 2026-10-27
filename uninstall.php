@@ -38,7 +38,7 @@ function fixpass_uninstall_site() {
 	}
 
 	// Single-use markers are stored as options named fixpass_used_{hash}.
-	$used = $wpdb->get_col( $wpdb->prepare( 'SELECT option_name FROM ' . $wpdb->options . ' WHERE option_name LIKE %s', $wpdb->esc_like( 'fixpass_used_' ) . '%' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+	$used = $wpdb->get_col( $wpdb->prepare( 'SELECT option_name FROM ' . $wpdb->options . ' WHERE option_name LIKE %s', $wpdb->esc_like( 'fixpass_used_' ) . '%' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- only the options table name is concatenated.
 	foreach ( (array) $used as $option ) {
 		delete_option( $option );
 	}
@@ -46,6 +46,8 @@ function fixpass_uninstall_site() {
 	foreach ( array( 'fixpass_access', 'fixpass_ended', 'fixpass_creating' ) as $option ) {
 		delete_option( $option );
 	}
+
+	delete_transient( 'fixpass_activation_notice' );
 
 	foreach ( array( 'fixpass_expire', 'fixpass_self_remove' ) as $hook ) {
 		wp_clear_scheduled_hook( $hook );
