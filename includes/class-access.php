@@ -493,22 +493,33 @@ final class Fixpass_Access {
 
 		nocache_headers();
 		header( 'Referrer-Policy: no-referrer' );
+		wp_enqueue_style( 'fixpass-login', FIXPASS_URL . 'assets/login.css', array( 'login' ), FIXPASS_VERSION );
 		login_header( __( 'Support login', 'fixpass' ), '', $error );
 
 		if ( ! $error ) {
-			echo '<form method="post" action="' . esc_url( add_query_arg( 'action', self::LOGIN_ACTION, wp_login_url() ) ) . '">';
-			echo '<p>' . esc_html(
+			echo '<form method="post" class="fixpass-login" action="' . esc_url( add_query_arg( 'action', self::LOGIN_ACTION, wp_login_url() ) ) . '">';
+			echo '<p class="fixpass-login__badge">' . esc_html__( 'Temporary support access', 'fixpass' ) . '</p>';
+			echo '<h2 class="fixpass-login__title">' . esc_html(
 				sprintf(
-					/* translators: 1: site name, 2: time left */
-					__( 'Log in to %1$s with temporary support access. Access ends in %2$s.', 'fixpass' ),
-					wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ),
+					/* translators: %s: site name */
+					__( 'Log in to %s', 'fixpass' ),
+					wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES )
+				)
+			) . '</h2>';
+			echo '<dl class="fixpass-login__facts">';
+			echo '<dt>' . esc_html__( 'You will be', 'fixpass' ) . '</dt><dd>' . esc_html__( 'Support, a temporary administrator', 'fixpass' ) . '</dd>';
+			echo '<dt>' . esc_html__( 'Access ends', 'fixpass' ) . '</dt><dd>' . esc_html(
+				sprintf(
+					/* translators: 1: date and time, 2: time left */
+					__( '%1$s (in %2$s)', 'fixpass' ),
+					wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $grant['expires_at'] ),
 					human_time_diff( time(), (int) $grant['expires_at'] )
 				)
-			) . '</p>';
-			echo '<p style="margin:12px 0">' . esc_html__( 'This link works once. The site owner can end access at any time.', 'fixpass' ) . '</p>';
+			) . '</dd></dl>';
+			echo '<p class="fixpass-login__note"><strong>' . esc_html__( 'This link works once.', 'fixpass' ) . '</strong> ' . esc_html__( 'After you log in it can’t be used again. The site owner can end access at any time.', 'fixpass' ) . '</p>';
 			echo '<input type="hidden" name="token" value="' . esc_attr( $token ) . '">';
 			wp_nonce_field( 'fixpass_login', 'fixpass_nonce' );
-			echo '<p class="submit"><button type="submit" class="button button-primary button-large">' . esc_html__( 'Log in as support', 'fixpass' ) . '</button></p>';
+			echo '<button type="submit" class="button button-primary button-large fixpass-login__button">' . esc_html__( 'Log in as support', 'fixpass' ) . '</button>';
 			echo '</form>';
 		}
 		login_footer();
