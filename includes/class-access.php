@@ -16,9 +16,22 @@ defined( 'ABSPATH' ) || exit;
 final class Fixpass_Access {
 
 	/**
-	 * User meta that marks a support account.
+	 * User meta that marks a support account. Its value is the ID of the site the account was
+	 * made for: on multisite, users are shared by the whole network, and a support account is
+	 * only ever a support account on its own site.
 	 */
 	const META = 'fixpass_support';
+
+	/**
+	 * Multisite: network option that lists the sites with support access (site ID => end time),
+	 * so the network admin can see and end them without visiting every site.
+	 */
+	const NETWORK_SITES = 'fixpass_network_sites';
+
+	/**
+	 * Multisite: network option, whether site administrators may give support access (default on).
+	 */
+	const ALLOW_SITE_ADMINS = 'fixpass_allow_site_admins';
 
 	/**
 	 * Option that holds the current access.
@@ -106,7 +119,79 @@ final class Fixpass_Access {
 	 * @return bool
 	 */
 	public static function is_support_user( $user_id ) {
-		return $user_id && (bool) get_user_meta( (int) $user_id, self::META, true );
+		return $user_id && (int) get_user_meta( (int) $user_id, self::META, true ) === get_current_blog_id();
+	}
+
+	/**
+	 * Whether the current person may give support access on this site. On a single site, any
+	 * administrator. On multisite, a super admin always; site administrators too, unless the
+	 * network admin turned that off.
+	 *
+	 * @return bool
+	 */
+	public static function can_give() {
+		if ( ! is_multisite() || is_super_admin() ) {
+			return current_user_can( 'manage_options' );
+		}
+		return current_user_can( 'manage_options' ) && (bool) get_site_option( self::ALLOW_SITE_ADMINS, 1 );
+	}
+
+	/**
+	 * Whether "Delete Fixpass when access ends" is offered. Plugin files are shared by every site
+	 * on a network, so there it only switches Fixpass off for this site and removes its data; and
+	 * when the network activated Fixpass, it can't be switched off for one site at all.
+	 *
+	 * @return bool
+	 */
+	public static function can_self_remove() {
+		if ( ! is_multisite() ) {
+			return true;
+		}
+		if ( ! function_exists( 'is_plugin_active_for_network' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+		return ! is_plugin_active_for_network( plugin_basename( FIXPASS_FILE ) );
+	}
+
+	/**
+	 * Multisite: note that this site has (or no longer has) support access, for the network list.
+	 *
+	 * @param int $expires_at End time, or 0 when access ended.
+	 */
+	private static function register_site( $expires_at ) {
+		if ( ! is_multisite() ) {
+			return;
+		}
+		$sites = (array) get_site_option( self::NETWORK_SITES, array() );
+		if ( $expires_at ) {
+			$sites[ get_current_blog_id() ] = (int) $expires_at;
+		} else {
+			unset( $sites[ get_current_blog_id() ] );
+		}
+		update_site_option( self::NETWORK_SITES, $sites );
+	}
+
+	/**
+	 * End the access on every site of a network (when Fixpass is deactivated for the network).
+	 *
+	 * @param string $reason Reason.
+	 */
+	public static function revoke_everywhere( $reason = 'deactivated' ) {
+		if ( ! is_multisite() ) {
+			self::revoke( $reason );
+			return;
+		}
+		foreach ( get_sites(
+			array(
+				'fields' => 'ids',
+				'number' => 0,
+			)
+		) as $site_id ) {
+			switch_to_blog( (int) $site_id );
+			self::revoke( $reason );
+			restore_current_blog();
+		}
+		delete_site_option( self::NETWORK_SITES );
 	}
 
 	/**
@@ -175,12 +260,13 @@ final class Fixpass_Access {
 					'created_at' => time(),
 					'expires_at' => $expires,
 					'created_by' => get_current_user_id(),
-					'cleanup'    => (bool) $cleanup,
+					'cleanup'    => (bool) $cleanup && self::can_self_remove(),
 					'status'     => 'waiting',
 					'spots'      => array_values( $spots ),
 				),
 				true
 			);
+			self::register_site( $expires );
 			delete_option( self::ENDED );
 			wp_clear_scheduled_hook( Fixpass_Plugin::SELF_REMOVE );
 			wp_schedule_single_event( $expires + MINUTE_IN_SECONDS, self::EXPIRE );
@@ -216,7 +302,7 @@ final class Fixpass_Access {
 		if ( is_wp_error( $user_id ) ) {
 			return $user_id;
 		}
-		update_user_meta( $user_id, self::META, 1 );
+		update_user_meta( $user_id, self::META, get_current_blog_id() );
 		update_user_meta( $user_id, 'show_admin_bar_front', 'true' );
 		return (int) $user_id;
 	}
@@ -289,6 +375,7 @@ final class Fixpass_Access {
 		}
 		delete_option( self::OPTION );
 		wp_clear_scheduled_hook( self::EXPIRE );
+		self::register_site( 0 );
 		if ( 'replaced' === $reason ) {
 			return; // A new access is being created: keep the spots picked for it.
 		}
@@ -317,9 +404,10 @@ final class Fixpass_Access {
 			'intval',
 			get_users(
 				array(
-					'meta_key' => self::META, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-					'fields'   => 'ID',
-					'blog_id'  => get_current_blog_id(),
+					'meta_key'   => self::META, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+					'meta_value' => get_current_blog_id(), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+					'fields'     => 'ID',
+					'blog_id'    => get_current_blog_id(),
 				)
 			)
 		);
@@ -512,6 +600,7 @@ final class Fixpass_Access {
 		delete_option( self::OPTION );
 		delete_option( Fixpass_Spotlight::OPTION );
 		wp_clear_scheduled_hook( self::EXPIRE );
+		self::register_site( 0 );
 		update_option(
 			self::ENDED,
 			array(

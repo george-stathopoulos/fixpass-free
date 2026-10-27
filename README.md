@@ -12,6 +12,7 @@ version released on WordPress.org (plugin slug `fixpass`); `readme.txt` is the W
 - Automatic context capture (Spotlight)
 - Single-use links
 - Temporary support access
+- Multisite support and full in-plugin documentation
 
 ## Layout
 
@@ -22,6 +23,8 @@ version released on WordPress.org (plugin slug `fixpass`); `readme.txt` is the W
 | `includes/class-spotlight.php` | Spotlight: stores picked spots and the context captured with them |
 | `includes/class-details.php` | Builds the support details (HTML and plain text) |
 | `includes/class-admin.php` | Guided setup and the support dashboard |
+| `includes/class-docs.php` | The in-plugin documentation (Fixpass → Documentation) |
+| `includes/class-network.php` | Multisite: the Network Admin overview |
 | `includes/class-plugin.php` | Bootstrap, activation redirect, self-removal |
 | `includes/class-redactor.php` | Removes secrets and email addresses from captured text |
 | `assets/` | Plain JavaScript and CSS. There is no build step: what you see is what ships. |

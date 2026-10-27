@@ -25,6 +25,8 @@ require_once FIXPASS_DIR . 'includes/class-redactor.php';
 require_once FIXPASS_DIR . 'includes/class-access.php';
 require_once FIXPASS_DIR . 'includes/class-spotlight.php';
 require_once FIXPASS_DIR . 'includes/class-details.php';
+require_once FIXPASS_DIR . 'includes/class-docs.php';
+require_once FIXPASS_DIR . 'includes/class-network.php';
 require_once FIXPASS_DIR . 'includes/class-admin.php';
 require_once FIXPASS_DIR . 'includes/class-plugin.php';
 

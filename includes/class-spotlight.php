@@ -52,7 +52,7 @@ final class Fixpass_Spotlight {
 		 */
 		return (bool) apply_filters( 'fixpass_spotlight', true )
 			&& is_user_logged_in()
-			&& current_user_can( 'manage_options' )
+			&& Fixpass_Access::can_give()
 			&& ! Fixpass_Access::is_support_user( get_current_user_id() )
 			&& ! Fixpass_Access::active();
 	}

@@ -23,6 +23,13 @@ final class Fixpass_Admin {
 	private static $hook = '';
 
 	/**
+	 * Documentation page hook suffix.
+	 *
+	 * @var string
+	 */
+	private static $docs_hook = '';
+
+	/**
 	 * What the last form submission produced.
 	 *
 	 * @var array|null
@@ -47,15 +54,19 @@ final class Fixpass_Admin {
 	 */
 	public static function menu() {
 		$support = Fixpass_Access::is_support_user( get_current_user_id() );
+		// On multisite the network admin can keep giving access to super admins only.
+		$cap        = $support ? 'read' : ( Fixpass_Access::can_give() ? 'manage_options' : 'manage_network_options' );
 		self::$hook = add_menu_page(
 			$support ? __( 'Support session', 'fixpass' ) : __( 'Fixpass', 'fixpass' ),
 			$support ? __( 'Support session', 'fixpass' ) : __( 'Fixpass', 'fixpass' ),
-			$support ? 'read' : 'manage_options',
+			$cap,
 			self::SLUG,
 			array( __CLASS__, 'render' ),
 			'dashicons-sos',
 			$support ? 3 : 80
 		);
+		add_submenu_page( self::SLUG, __( 'Fixpass', 'fixpass' ), $support ? __( 'Session', 'fixpass' ) : __( 'Setup', 'fixpass' ), $cap, self::SLUG, array( __CLASS__, 'render' ) );
+		self::$docs_hook = add_submenu_page( self::SLUG, __( 'Fixpass documentation', 'fixpass' ), __( 'Documentation', 'fixpass' ), $cap, Fixpass_Docs::SLUG, array( 'Fixpass_Docs', 'render' ) );
 		add_action( 'load-' . self::$hook, array( __CLASS__, 'handle' ) );
 	}
 
@@ -65,7 +76,7 @@ final class Fixpass_Admin {
 	 * @param string $hook Hook suffix.
 	 */
 	public static function assets( $hook ) {
-		if ( $hook !== self::$hook ) {
+		if ( $hook !== self::$hook && $hook !== self::$docs_hook ) {
 			return;
 		}
 		wp_enqueue_style( 'fixpass-admin', FIXPASS_URL . 'assets/admin.css', array(), FIXPASS_VERSION );
@@ -101,7 +112,7 @@ final class Fixpass_Admin {
 			}
 			return;
 		}
-		if ( ! current_user_can( 'manage_options' ) || Fixpass_Access::is_support_user( get_current_user_id() ) ) {
+		if ( ! Fixpass_Access::can_give() || Fixpass_Access::is_support_user( get_current_user_id() ) ) {
 			return;
 		}
 
@@ -159,7 +170,7 @@ final class Fixpass_Admin {
 		echo '</h1>';
 		if ( Fixpass_Access::is_support_user( get_current_user_id() ) ) {
 			self::render_support();
-		} elseif ( current_user_can( 'manage_options' ) ) {
+		} elseif ( Fixpass_Access::can_give() ) {
 			self::render_owner();
 		}
 		echo '</div>';
@@ -237,6 +248,7 @@ final class Fixpass_Admin {
 		echo '<a class="button button-secondary button-hero" href="' . esc_url( self::url( array( 'step' => 'access' ) ) ) . '">' . esc_html__( 'Continue', 'fixpass' ) . '</a></div>';
 		echo '</div>';
 		self::render_privacy_note();
+		echo '<p><a href="' . esc_url( Fixpass_Docs::url() ) . '">' . esc_html__( 'Read the documentation', 'fixpass' ) . '</a></p>';
 	}
 
 	/**
@@ -285,7 +297,13 @@ final class Fixpass_Admin {
 			echo '<option value="' . esc_attr( $hours ) . '"' . selected( Fixpass_Access::DEFAULT_HOURS, $hours, false ) . '>' . esc_html( $label ) . '</option>';
 		}
 		echo '</select></p>';
-		echo '<p><label><input type="checkbox" name="cleanup" value="1"> ' . esc_html__( 'Delete Fixpass when access ends', 'fixpass' ) . '</label><br><span class="description">' . esc_html__( 'Fixpass deactivates and deletes itself, with everything it stored. Without this, Fixpass stays installed and only the support account is deleted.', 'fixpass' ) . '</span></p>';
+		if ( Fixpass_Access::can_self_remove() ) {
+			$label = is_multisite() ? __( 'Switch Fixpass off for this site when access ends', 'fixpass' ) : __( 'Delete Fixpass when access ends', 'fixpass' );
+			$help  = is_multisite()
+				? __( 'Fixpass deactivates itself on this site and removes what it stored here. The plugin files stay, because other sites on the network may use them.', 'fixpass' )
+				: __( 'Fixpass deactivates and deletes itself, with everything it stored. Without this, Fixpass stays installed and only the support account is deleted.', 'fixpass' );
+			echo '<p><label><input type="checkbox" name="cleanup" value="1"> ' . esc_html( $label ) . '</label><br><span class="description">' . esc_html( $help ) . '</span></p>';
+		}
 		echo '<ul class="fixpass-list"><li>' . esc_html__( 'Support gets an administrator account with a login link instead of a password.', 'fixpass' ) . '</li>';
 		echo '<li>' . esc_html__( 'The link works once. You can make a new one at any time.', 'fixpass' ) . '</li>';
 		echo '<li>' . esc_html__( 'Support cannot manage users or install themes, and cannot remove Fixpass.', 'fixpass' ) . '</li>';
@@ -348,7 +366,7 @@ final class Fixpass_Admin {
 			)
 		) . '</p>';
 		if ( ! empty( $grant['cleanup'] ) ) {
-			echo '<p>' . esc_html__( 'Fixpass will also delete itself when access ends.', 'fixpass' ) . '</p>';
+			echo '<p>' . esc_html( is_multisite() ? __( 'Fixpass will also switch itself off for this site when access ends.', 'fixpass' ) : __( 'Fixpass will also delete itself when access ends.', 'fixpass' ) ) . '</p>';
 		}
 		echo '<form method="post" action="' . esc_url( self::url() ) . '" class="fixpass-inline">';
 		wp_nonce_field( 'fixpass_action', 'fixpass_nonce' );
@@ -571,7 +589,11 @@ final class Fixpass_Admin {
 	 * @return string[]
 	 */
 	public static function action_links( $links ) {
-		array_unshift( $links, '<a href="' . esc_url( self::url() ) . '">' . esc_html__( 'Open', 'fixpass' ) . '</a>' );
+		array_unshift(
+			$links,
+			'<a href="' . esc_url( self::url() ) . '">' . esc_html__( 'Open', 'fixpass' ) . '</a>',
+			'<a href="' . esc_url( Fixpass_Docs::url() ) . '">' . esc_html__( 'Documentation', 'fixpass' ) . '</a>'
+		);
 		return $links;
 	}
 }

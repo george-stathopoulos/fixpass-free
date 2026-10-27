@@ -24,6 +24,14 @@ Fixpass does it in a minute.
 * **Support dashboard.** After logging in, support lands on a Support session page with your spots (each one opens the page highlighted), the site information, and a button to end access.
 * **Automatic cleanup.** When access ends, by time or because you or support ended it, the support account and its sessions are deleted. Optionally, Fixpass also deactivates and deletes itself, with everything it stored.
 
+= Multisite =
+
+Fixpass works on multisite networks. Each site gives and ends its own support access, and the support account is an administrator of that one site only (never a super admin). Super admins get a Fixpass overview in the Network Admin: see every site with support access, end it with one click, and choose whether site administrators may give access. Deactivating or deleting Fixpass for the network ends access and cleans up on every site.
+
+= Documentation =
+
+Full documentation is built in: open Fixpass → Documentation in your admin. It covers the setup, Spotlight, support access, single-use links, cleanup, security and privacy, multisite, troubleshooting and hooks for developers.
+
 = Security =
 
 * Login links are random 256-bit codes; only a hash is stored.
@@ -37,7 +45,7 @@ Fixpass does it in a minute.
 
 Fixpass doesn't send data to any external service and doesn't load anything from outside your site. The details (login link, spots, site information, plugins and themes) leave your site only when you copy them and send them yourself.
 
-A spot keeps the page address, your note, your screen size and browser, and the errors and failed requests on that page. Spots are deleted when access ends, or after 30 days if you never give access. Passwords, keys and email addresses are removed from the captured errors and requests.
+A spot keeps the page address, your note, your screen size and browser, and the errors and failed requests on that page. Spots are deleted when access ends and when Fixpass is deleted; spots you picked but never sent are cleared once they are 30 days old, the next time a spot is picked. Passwords, keys and email addresses are removed from the captured errors and requests.
 
 == Installation ==
 
@@ -62,6 +70,10 @@ Support gets an administrator account, so they can fix problems. They cannot man
 = What if the link doesn't work for support? =
 
 Links work once. Open Fixpass, choose "Copy support details with a new link", and send the new details.
+
+= Does it work on multisite? =
+
+Yes. Activate it for the network or for single sites. See the Multisite section above.
 
 = Will visitors notice anything? =
 
