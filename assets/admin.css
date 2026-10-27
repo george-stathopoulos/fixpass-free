@@ -6,10 +6,8 @@
 .fixpass .fixpass-steps li.is-current { color: #1d2327; font-weight: 600; }
 .fixpass .fixpass-steps li.is-current span { background: #2271b1; color: #fff; }
 .fixpass .fixpass-steps li.is-done span { background: #00a32a; color: #fff; }
-.fixpass .fixpass-cards { display: flex; flex-wrap: wrap; gap: 16px; max-width: 900px; }
-.fixpass .fixpass-cards .fixpass-card { flex: 1 1 320px; margin: 0; }
 .fixpass .fixpass-card { background: #fff; border: 1px solid #c3c4c7; border-radius: 4px; padding: 4px 20px 16px; margin: 16px 0; max-width: 900px; box-sizing: border-box; }
-.fixpass .fixpass-card--main { border-color: #2271b1; box-shadow: 0 0 0 1px #2271b1; }
+.fixpass .fixpass-note { white-space: pre-wrap; font-size: 14px; }
 .fixpass .fixpass-list { list-style: disc; margin-left: 20px; }
 .fixpass .fixpass-inline { display: inline-block; margin: 0 8px 0 0; }
 .fixpass .fixpass-status--active { color: #00a32a; }

@@ -225,12 +225,12 @@ final class Fixpass_Access {
 	/**
 	 * Create the temporary account and its first login link.
 	 *
-	 * @param int      $hours   Access length (one of durations()).
-	 * @param bool     $cleanup Delete Fixpass once access ends.
-	 * @param string[] $spots   IDs of the spots to show support.
+	 * @param int    $hours   Access length (one of durations()).
+	 * @param bool   $cleanup Delete Fixpass once access ends.
+	 * @param string $note    The owner's description of the problem, for support.
 	 * @return array|WP_Error { url, grant }
 	 */
-	public static function create( $hours, $cleanup, array $spots ) {
+	public static function create( $hours, $cleanup, $note = '' ) {
 		$hours = isset( self::durations()[ (int) $hours ] ) ? (int) $hours : self::DEFAULT_HOURS;
 
 		// Two clicks landing at the same instant must not make two accounts. add_option() is atomic
@@ -262,7 +262,7 @@ final class Fixpass_Access {
 					'created_by' => get_current_user_id(),
 					'cleanup'    => (bool) $cleanup && self::can_self_remove(),
 					'status'     => 'waiting',
-					'spots'      => array_values( $spots ),
+					'note'       => Fixpass_Redactor::text( substr( sanitize_textarea_field( (string) $note ), 0, 1000 ) ),
 				),
 				true
 			);
@@ -330,8 +330,8 @@ final class Fixpass_Access {
 	}
 
 	/**
-	 * End the access now: delete the support account and its sessions, remove the spots, and
-	 * (if the owner asked) schedule Fixpass's own removal.
+	 * End the access now: delete the support account and its sessions, and (if the owner asked)
+	 * schedule Fixpass's own removal.
 	 *
 	 * @param string $reason revoked | expired | support_ended | deactivated | replaced.
 	 */
@@ -377,9 +377,8 @@ final class Fixpass_Access {
 		wp_clear_scheduled_hook( self::EXPIRE );
 		self::register_site( 0 );
 		if ( 'replaced' === $reason ) {
-			return; // A new access is being created: keep the spots picked for it.
+			return; // A new access is being created.
 		}
-		delete_option( Fixpass_Spotlight::OPTION );
 		update_option(
 			self::ENDED,
 			array(
@@ -598,7 +597,6 @@ final class Fixpass_Access {
 			return;
 		}
 		delete_option( self::OPTION );
-		delete_option( Fixpass_Spotlight::OPTION );
 		wp_clear_scheduled_hook( self::EXPIRE );
 		self::register_site( 0 );
 		update_option(

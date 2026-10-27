@@ -8,7 +8,7 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Pattern-based redaction for the context captured by Spotlight (error messages, request URLs).
+ * Pattern-based redaction for the owner's description of the problem, in case it contains a secret.
  */
 final class Fixpass_Redactor {
 

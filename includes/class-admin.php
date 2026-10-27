@@ -8,8 +8,8 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * One menu item. The site owner sees a guided setup (choose, spotlight the problem, give access,
- * copy the details). Support, once logged in, sees the Support session dashboard.
+ * One menu item. The site owner sees a guided setup (get started, give access, copy the
+ * details). Support, once logged in, sees the Support session dashboard.
  */
 final class Fixpass_Admin {
 
@@ -117,14 +117,18 @@ final class Fixpass_Admin {
 		}
 
 		if ( 'give' === $do ) {
-			$ids   = self::posted_spot_ids();
-			$hours = isset( $_POST['hours'] ) ? absint( $_POST['hours'] ) : Fixpass_Access::DEFAULT_HOURS;
-			$out   = Fixpass_Access::create( $hours, ! empty( $_POST['cleanup'] ), wp_list_pluck( Fixpass_Spotlight::find( $ids ), 'id' ) );
+			$hours        = isset( $_POST['hours'] ) ? absint( $_POST['hours'] ) : Fixpass_Access::DEFAULT_HOURS;
+			$note         = isset( $_POST['note'] ) ? sanitize_textarea_field( wp_unslash( $_POST['note'] ) ) : '';
+			$out          = Fixpass_Access::create( $hours, ! empty( $_POST['cleanup'] ), $note );
 			self::$result = is_wp_error( $out ) ? array( 'error' => $out ) : self::copy_result( $out['grant'], $out['url'] );
 		} elseif ( 'link' === $do ) {
 			$grant = Fixpass_Access::active();
 			$url   = Fixpass_Access::new_link();
-			self::$result = is_wp_error( $url ) || ! $grant ? array( 'error' => is_wp_error( $url ) ? $url : new WP_Error( 'fixpass_inactive', __( 'Support access is not active.', 'fixpass' ) ) ) : self::copy_result( $grant, $url );
+			if ( ! $grant || is_wp_error( $url ) ) {
+				self::$result = array( 'error' => is_wp_error( $url ) ? $url : new WP_Error( 'fixpass_inactive', __( 'Support access is not active.', 'fixpass' ) ) );
+			} else {
+				self::$result = self::copy_result( $grant, $url );
+			}
 		} elseif ( 'end' === $do ) {
 			Fixpass_Access::revoke( 'revoked' );
 			wp_safe_redirect( self::url() );
@@ -141,34 +145,20 @@ final class Fixpass_Admin {
 	 */
 	private static function copy_result( array $grant, $url ) {
 		return array(
-			'message' => Fixpass_Details::message( $grant, $url, Fixpass_Spotlight::find( (array) $grant['spots'] ) ),
+			'message' => Fixpass_Details::message( $grant, $url ),
 			'url'     => $url,
 		);
-	}
-
-	/**
-	 * Spot IDs from a comma-separated form field or address.
-	 *
-	 * @return string[]
-	 */
-	private static function posted_spot_ids() {
-		$raw = '';
-		if ( isset( $_POST['spots'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- checked in handle().
-			$raw = sanitize_text_field( wp_unslash( $_POST['spots'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
-		} elseif ( isset( $_GET['spots'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only: shows the spots picked.
-			$raw = sanitize_text_field( wp_unslash( $_GET['spots'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		}
-		return array_slice( array_filter( array_map( 'sanitize_key', explode( ',', $raw ) ) ), 0, Fixpass_Spotlight::MAX );
 	}
 
 	/**
 	 * The page.
 	 */
 	public static function render() {
+		$support = Fixpass_Access::is_support_user( get_current_user_id() );
 		echo '<div class="wrap fixpass"><h1>';
-		echo esc_html( Fixpass_Access::is_support_user( get_current_user_id() ) ? __( 'Support session', 'fixpass' ) : __( 'Fixpass', 'fixpass' ) );
+		echo esc_html( $support ? __( 'Support session', 'fixpass' ) : __( 'Fixpass', 'fixpass' ) );
 		echo '</h1>';
-		if ( Fixpass_Access::is_support_user( get_current_user_id() ) ) {
+		if ( $support ) {
 			self::render_support();
 		} elseif ( Fixpass_Access::can_give() ) {
 			self::render_owner();
@@ -194,9 +184,7 @@ final class Fixpass_Admin {
 			return;
 		}
 		$step = isset( $_GET['step'] ) ? sanitize_key( wp_unslash( $_GET['step'] ) ) : 'start'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only: picks the screen.
-		if ( 'spots' === $step ) {
-			self::render_spots_step();
-		} elseif ( 'access' === $step ) {
+		if ( 'access' === $step ) {
 			self::render_access_step();
 		} else {
 			self::render_start();
@@ -204,27 +192,26 @@ final class Fixpass_Admin {
 	}
 
 	/**
-	 * The four steps, with the current one marked.
+	 * The three steps, with the current one marked.
 	 *
-	 * @param int $current 1-4.
+	 * @param int $current 1-3.
 	 */
 	private static function steps( $current ) {
 		$labels = array(
-			1 => __( 'Choose', 'fixpass' ),
-			2 => __( 'Spotlight the problem', 'fixpass' ),
-			3 => __( 'Give access', 'fixpass' ),
-			4 => __( 'Copy the details', 'fixpass' ),
+			1 => __( 'Get started', 'fixpass' ),
+			2 => __( 'Give access', 'fixpass' ),
+			3 => __( 'Copy the details', 'fixpass' ),
 		);
 		echo '<ol class="fixpass-steps">';
 		foreach ( $labels as $n => $label ) {
-			$class = $n === $current ? ' class="is-current"' : ( $n < $current ? ' class="is-done"' : '' );
-			echo '<li' . $class . '><span>' . (int) $n . '</span> ' . esc_html( $label ) . '</li>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed class attribute.
+			$class = $n === $current ? 'is-current' : ( $n < $current ? 'is-done' : '' );
+			echo '<li class="' . esc_attr( $class ) . '"><span>' . (int) $n . '</span> ' . esc_html( $label ) . '</li>';
 		}
 		echo '</ol>';
 	}
 
 	/**
-	 * Step 1: choose how to start.
+	 * Step 1: what is about to happen, and what Fixpass captures.
 	 */
 	private static function render_start() {
 		self::steps( 1 );
@@ -239,59 +226,29 @@ final class Fixpass_Admin {
 			) . '</p></div>';
 		}
 		echo '<p class="fixpass-lead">' . esc_html__( 'Need help with your site? Give your support team a temporary, single-use login link instead of a password. Access ends by itself, and the support account is deleted.', 'fixpass' ) . '</p>';
-		echo '<div class="fixpass-cards">';
-		echo '<div class="fixpass-card fixpass-card--main"><h2>' . esc_html__( 'Show the problem, then give access', 'fixpass' ) . '</h2>';
-		echo '<p>' . esc_html__( 'Recommended. Point at the broken part of your site. Fixpass captures the page, your screen size, your browser and any errors on the page.', 'fixpass' ) . '</p>';
-		echo '<a class="button button-primary button-hero" href="' . esc_url( self::url( array( 'step' => 'spots' ) ) ) . '">' . esc_html__( 'Start', 'fixpass' ) . '</a></div>';
-		echo '<div class="fixpass-card"><h2>' . esc_html__( 'Just give access', 'fixpass' ) . '</h2>';
-		echo '<p>' . esc_html__( 'Skip pointing at the problem. You can still describe it to your support team yourself.', 'fixpass' ) . '</p>';
-		echo '<a class="button button-secondary button-hero" href="' . esc_url( self::url( array( 'step' => 'access' ) ) ) . '">' . esc_html__( 'Continue', 'fixpass' ) . '</a></div>';
-		echo '</div>';
-		self::render_privacy_note();
+		echo '<div class="fixpass-card"><h2>' . esc_html__( 'What your support team gets, automatically', 'fixpass' ) . '</h2>';
+		echo '<ul class="fixpass-list">';
+		echo '<li>' . esc_html__( 'WordPress, PHP and database versions, and how your site is set up.', 'fixpass' ) . '</li>';
+		echo '<li>' . esc_html__( 'Your plugins and themes, with versions and waiting updates.', 'fixpass' ) . '</li>';
+		echo '<li>' . esc_html__( 'The result of WordPress’s own Site Health tests, when they have run.', 'fixpass' ) . '</li>';
+		echo '<li>' . esc_html__( 'What you tell them is wrong.', 'fixpass' ) . '</li></ul>';
+		echo '<p class="description">' . esc_html__( 'Passwords, keys, users, content and customer data are never included. Nothing is sent anywhere: you copy the details and send them yourself.', 'fixpass' ) . '</p>';
+		echo '<p><a class="button button-primary button-hero" href="' . esc_url( self::url( array( 'step' => 'access' ) ) ) . '">' . esc_html__( 'Start', 'fixpass' ) . '</a></p></div>';
 		echo '<p><a href="' . esc_url( Fixpass_Docs::url() ) . '">' . esc_html__( 'Read the documentation', 'fixpass' ) . '</a></p>';
 	}
 
 	/**
-	 * Step 2: point at the problem.
-	 */
-	private static function render_spots_step() {
-		self::steps( 2 );
-		echo '<div class="fixpass-card"><h2>' . esc_html__( 'Point at the problem', 'fixpass' ) . '</h2><ol>';
-		echo '<li>' . esc_html__( 'Open your site. The Spotlight button glows in the toolbar.', 'fixpass' ) . '</li>';
-		echo '<li>' . esc_html__( 'Go to the page that has the problem, click Spotlight a problem, then click the broken part or drag a box around it.', 'fixpass' ) . '</li>';
-		echo '<li>' . esc_html__( 'Add a short note, then click Continue. You come back here.', 'fixpass' ) . '</li></ol>';
-		echo '<p><a class="button button-primary button-hero" href="' . esc_url( add_query_arg( 'fxp_guide', '1', home_url( '/' ) ) ) . '">' . esc_html__( 'Open my site', 'fixpass' ) . '</a> ';
-		echo '<a class="button button-link" href="' . esc_url( self::url( array( 'step' => 'access' ) ) ) . '">' . esc_html__( 'Skip this step', 'fixpass' ) . '</a></p></div>';
-		self::render_privacy_note();
-	}
-
-	/**
-	 * Step 3: choose how long, and give access.
+	 * Step 2: describe the problem, choose how long, and give access.
 	 */
 	private static function render_access_step() {
-		self::steps( 3 );
-		$spots = Fixpass_Spotlight::find( self::posted_spot_ids() );
-		if ( $spots ) {
-			echo '<div class="fixpass-card"><h2>' . esc_html__( 'Your spots', 'fixpass' ) . '</h2><ul class="fixpass-list">';
-			foreach ( $spots as $spot ) {
-				$text = ( '' !== $spot['label'] ? $spot['label'] : __( 'Spot', 'fixpass' ) ) . ' · ' . ( '' !== $spot['title'] ? $spot['title'] : $spot['url'] );
-				if ( $spot['errors'] || $spot['requests'] ) {
-					$text .= ' · ' . sprintf(
-						/* translators: 1: number of errors, 2: number of failed requests */
-						__( '%1$d errors, %2$d failed requests captured', 'fixpass' ),
-						count( $spot['errors'] ),
-						count( $spot['requests'] )
-					);
-				}
-				echo '<li>' . esc_html( $text ) . '</li>';
-			}
-			echo '</ul></div>';
-		}
+		self::steps( 2 );
 		echo '<form method="post" class="fixpass-card" action="' . esc_url( self::url() ) . '">';
 		wp_nonce_field( 'fixpass_action', 'fixpass_nonce' );
 		echo '<input type="hidden" name="fixpass_do" value="give">';
-		echo '<input type="hidden" name="spots" value="' . esc_attr( implode( ',', wp_list_pluck( $spots, 'id' ) ) ) . '">';
 		echo '<h2>' . esc_html__( 'Give access', 'fixpass' ) . '</h2>';
+		echo '<p><label for="fixpass-note"><strong>' . esc_html__( 'What’s wrong? (optional)', 'fixpass' ) . '</strong></label><br>';
+		echo '<textarea id="fixpass-note" name="note" rows="4" maxlength="1000" class="large-text" placeholder="' . esc_attr__( 'For example: the checkout page shows an error after I click Pay.', 'fixpass' ) . '"></textarea><br>';
+		echo '<span class="description">' . esc_html__( 'Don’t put passwords here.', 'fixpass' ) . '</span></p>';
 		echo '<p><label for="fixpass-hours"><strong>' . esc_html__( 'How long should access last?', 'fixpass' ) . '</strong></label><br><select id="fixpass-hours" name="hours">';
 		foreach ( Fixpass_Access::durations() as $hours => $label ) {
 			echo '<option value="' . esc_attr( $hours ) . '"' . selected( Fixpass_Access::DEFAULT_HOURS, $hours, false ) . '>' . esc_html( $label ) . '</option>';
@@ -313,16 +270,16 @@ final class Fixpass_Admin {
 	}
 
 	/**
-	 * Step 4: copy the details for support.
+	 * Step 3: copy the details for support.
 	 *
 	 * @param array $result { message, url }.
 	 */
 	private static function render_copy( array $result ) {
-		self::steps( 4 );
+		self::steps( 3 );
 		$grant = Fixpass_Access::active();
 		echo '<div class="notice notice-success inline"><p>' . esc_html__( 'Support access is on. Copy the details and send them to your support team.', 'fixpass' ) . '</p></div>';
 		echo '<div class="fixpass-card"><h2>' . esc_html__( 'Copy support details', 'fixpass' ) . '</h2>';
-		echo '<p>' . esc_html__( 'The login link, your spots, site information, and your plugins and themes, ready to paste into an email or ticket. Passwords and keys are never included.', 'fixpass' ) . '</p>';
+		echo '<p>' . esc_html__( 'The login link, your description of the problem, and your site’s details, ready to paste into an email or ticket. Passwords and keys are never included.', 'fixpass' ) . '</p>';
 		echo '<p><button type="button" class="button button-primary button-hero" data-fixpass-copy data-copied="' . esc_attr__( 'Copied!', 'fixpass' ) . '" data-failed="' . esc_attr__( 'Copy failed: select the text below and copy it yourself.', 'fixpass' ) . '">' . esc_html__( 'Copy support details', 'fixpass' ) . '</button> <span class="fixpass-copy-status" role="status"></span></p>';
 		if ( $grant ) {
 			echo '<p class="description">' . esc_html(
@@ -382,13 +339,6 @@ final class Fixpass_Admin {
 	}
 
 	/**
-	 * What Fixpass captures and shares.
-	 */
-	private static function render_privacy_note() {
-		echo '<p class="description">' . esc_html__( 'Fixpass sends nothing to any outside service. The details only leave your site when you copy them and send them yourself. Nothing on your screen is recorded.', 'fixpass' ) . '</p>';
-	}
-
-	/**
 	 * Tags the copied message uses.
 	 *
 	 * @return array
@@ -428,7 +378,7 @@ final class Fixpass_Admin {
 	/* ------------------------------------------------------------------ Support dashboard */
 
 	/**
-	 * The support dashboard: the owner's spots, site details and ways to end the session.
+	 * The support dashboard: the problem, the site details and a way to end the session.
 	 */
 	private static function render_support() {
 		$grant = Fixpass_Access::active();
@@ -451,17 +401,16 @@ final class Fixpass_Admin {
 			)
 		) . '</p></div>';
 
-		$spots = Fixpass_Spotlight::find( (array) $grant['spots'] );
-		echo '<div class="fixpass-card"><h2>' . esc_html__( 'The problem, as the site owner showed it', 'fixpass' ) . '</h2>';
-		if ( $spots ) {
-			echo '<p>' . esc_html__( 'Each link opens the page with the spot highlighted.', 'fixpass' ) . '</p>';
-			echo wp_kses( Fixpass_Details::render( Fixpass_Details::spot_sections( $spots ) ), self::dashboard_tags() );
+		echo '<div class="fixpass-card"><h2>' . esc_html__( 'The problem', 'fixpass' ) . '</h2>';
+		$problem = Fixpass_Details::problem_sections( $grant );
+		if ( $problem ) {
+			echo '<p class="fixpass-note">' . esc_html( $grant['note'] ) . '</p>';
 		} else {
-			echo '<p>' . esc_html__( 'The site owner didn’t point at a spot. Ask them what is wrong.', 'fixpass' ) . '</p>';
+			echo '<p>' . esc_html__( 'The site owner didn’t describe the problem. Ask them what is wrong.', 'fixpass' ) . '</p>';
 		}
 		echo '</div>';
 
-		echo '<div class="fixpass-card"><h2>' . esc_html__( 'Site details', 'fixpass' ) . '</h2>';
+		echo '<div class="fixpass-card"><h2>' . esc_html__( 'Site details, captured automatically', 'fixpass' ) . '</h2>';
 		echo wp_kses( Fixpass_Details::render( Fixpass_Details::site_sections() ), self::dashboard_tags() );
 		echo '</div>';
 
@@ -583,7 +532,7 @@ final class Fixpass_Admin {
 	}
 
 	/**
-	 * Plugins screen link.
+	 * Plugins screen links.
 	 *
 	 * @param string[] $links Links.
 	 * @return string[]

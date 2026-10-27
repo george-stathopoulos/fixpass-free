@@ -27,7 +27,6 @@ final class Fixpass_Plugin {
 	 */
 	public static function init() {
 		Fixpass_Access::init();
-		Fixpass_Spotlight::init();
 		Fixpass_Admin::init();
 		if ( is_multisite() ) {
 			Fixpass_Network::init();
@@ -90,7 +89,7 @@ final class Fixpass_Plugin {
 		foreach ( (array) $used as $option ) {
 			delete_option( $option );
 		}
-		foreach ( array( Fixpass_Access::OPTION, Fixpass_Access::ENDED, Fixpass_Spotlight::OPTION, 'fixpass_creating' ) as $option ) {
+		foreach ( array( Fixpass_Access::OPTION, Fixpass_Access::ENDED, 'fixpass_creating' ) as $option ) {
 			delete_option( $option );
 		}
 		foreach ( array( Fixpass_Access::EXPIRE, self::SELF_REMOVE ) as $hook ) {

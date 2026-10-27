@@ -9,10 +9,10 @@ version released on WordPress.org (plugin slug `fixpass`); `readme.txt` is the W
 - Automatic cleanup
 - Support dashboard
 - Copy support details
-- Automatic context capture (Spotlight)
+- Automatic context capture
 - Single-use links
 - Temporary support access
-- Multisite support and full in-plugin documentation
+- Multisite support, and full documentation inside the plugin (Fixpass → Documentation)
 
 ## Layout
 
@@ -20,13 +20,12 @@ version released on WordPress.org (plugin slug `fixpass`); `readme.txt` is the W
 |---|---|
 | `fixpass.php` | Plugin header and loader |
 | `includes/class-access.php` | Support account, single-use link, expiry, cleanup, capability limits |
-| `includes/class-spotlight.php` | Spotlight: stores picked spots and the context captured with them |
-| `includes/class-details.php` | Builds the support details (HTML and plain text) |
+| `includes/class-details.php` | Captures the site context and builds the support details (HTML and plain text) |
 | `includes/class-admin.php` | Guided setup and the support dashboard |
-| `includes/class-docs.php` | The in-plugin documentation (Fixpass → Documentation) |
+| `includes/class-docs.php` | The in-plugin documentation |
 | `includes/class-network.php` | Multisite: the Network Admin overview |
 | `includes/class-plugin.php` | Bootstrap, activation redirect, self-removal |
-| `includes/class-redactor.php` | Removes secrets and email addresses from captured text |
+| `includes/class-redactor.php` | Removes secrets and email addresses from the owner's description |
 | `assets/` | Plain JavaScript and CSS. There is no build step: what you see is what ships. |
 | `uninstall.php` | Deletes the support account and everything Fixpass stored |
 

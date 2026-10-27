@@ -8,20 +8,20 @@ Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Give your support team safe, temporary access to your site with a single-use login link, and show them the exact spot that's broken.
+Give your support team safe, temporary access to your site with a single-use login link, and everything they need to start fixing.
 
 == Description ==
 
-Something's wrong with your site and you need help. Usually that means a long email thread: sharing a password, sending screenshots, answering "which page?" and "which browser?".
+Something's wrong with your site and you need help. Usually that means a long email thread: sharing a password, then answering "which WordPress version?", "which plugins?" and "what PHP are you on?".
 
 Fixpass does it in a minute.
 
-* **Guided setup.** A short walkthrough: choose how to start, point at the problem, give access, copy the details. No settings to hunt for.
-* **Automatic context capture.** Click "Spotlight a problem" in the toolbar, then click the broken part of the page or drag a box around it. Add a note. Fixpass captures the page, your screen size, your browser, and the JavaScript errors and failed requests on that page. Nothing on your screen is recorded.
+* **Guided setup.** Three steps: get started, give access, copy the details. No settings to hunt for.
 * **Temporary support access.** One click creates a temporary administrator account for your support team. Choose 1 day to 1 week. There is no password: support logs in with a link.
 * **Single-use links.** The login link works once. If support needs to come back, make a new link and the old one stops working. Email scanners that open links can't use it up: it is only used when support presses the login button.
-* **Copy support details.** One button copies the login link, your spots, site information, and your plugins and themes (with versions and available updates), ready to paste into an email or ticket.
-* **Support dashboard.** After logging in, support lands on a Support session page with your spots (each one opens the page highlighted), the site information, and a button to end access.
+* **Automatic context capture.** Fixpass reads your site's details for you: WordPress, PHP and database versions, configuration, Site Health results, every plugin and theme with versions and waiting updates, must-use plugins and drop-ins. You just add a sentence about what's wrong.
+* **Copy support details.** One button copies the login link, your description and the captured details, formatted for email and as plain text, ready to paste into a ticket.
+* **Support dashboard.** After logging in, support lands on a Support session page with your description, the site details, and a button to end access.
 * **Automatic cleanup.** When access ends, by time or because you or support ended it, the support account and its sessions are deleted. Optionally, Fixpass also deactivates and deletes itself, with everything it stored.
 
 = Multisite =
@@ -30,7 +30,7 @@ Fixpass works on multisite networks. Each site gives and ends its own support ac
 
 = Documentation =
 
-Full documentation is built in: open Fixpass → Documentation in your admin. It covers the setup, Spotlight, support access, single-use links, cleanup, security and privacy, multisite, troubleshooting and hooks for developers.
+Full documentation is built in: open Fixpass → Documentation in your admin. It covers the setup, automatic context capture, support access, single-use links, cleanup, security and privacy, multisite, troubleshooting and developer notes.
 
 = Security =
 
@@ -43,15 +43,16 @@ Full documentation is built in: open Fixpass → Documentation in your admin. It
 
 = Privacy =
 
-Fixpass doesn't send data to any external service and doesn't load anything from outside your site. The details (login link, spots, site information, plugins and themes) leave your site only when you copy them and send them yourself.
+Fixpass doesn't send data to any external service and doesn't load anything from outside your site. The details leave your site only when you copy them and send them yourself. Passwords, keys, users, content and customer data are never included.
 
-A spot keeps the page address, your note, your screen size and browser, and the errors and failed requests on that page. Spots are deleted when access ends and when Fixpass is deleted; spots you picked but never sent are cleared once they are 30 days old, the next time a spot is picked. Passwords, keys and email addresses are removed from the captured errors and requests.
+Fixpass stores only the access itself and your description of the problem, and deletes both when access ends. It sends one email, to the site's administration email address, when support logs in; it includes the IP address support logged in from.
 
 == Installation ==
 
 1. Install and activate Fixpass from Plugins → Add New, or upload the zip.
-2. Fixpass opens its guided setup.
-3. Choose "Show the problem, then give access" (recommended) or "Just give access", then copy the details and send them to your support team.
+2. Fixpass opens its guided setup. Click Start.
+3. Describe the problem, choose how long access lasts, and click "Give access".
+4. Click "Copy support details" and send them to your support team.
 
 == Frequently Asked Questions ==
 
@@ -77,11 +78,11 @@ Yes. Activate it for the network or for single sites. See the Multisite section 
 
 = Will visitors notice anything? =
 
-No. Spotlight is only shown to administrators.
+No. Fixpass shows nothing to visitors.
 
 = What does uninstalling remove? =
 
-Any support account, and everything Fixpass stored: its settings, spots and scheduled tasks.
+Any support account, and everything Fixpass stored: the access, your description, and its scheduled tasks. Fixpass creates no database tables.
 
 == Changelog ==
 

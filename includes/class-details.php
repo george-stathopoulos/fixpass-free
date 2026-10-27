@@ -8,71 +8,60 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Builds the details as sections of label => value rows. The same sections are shown on the
- * support dashboard and turned into HTML (pastes formatted into an email) and plain text (pastes
- * anywhere) for the owner's "Copy support details" button. Nothing here makes a network request.
+ * Captures the context of the site automatically and builds it as sections of label => value
+ * rows. The same sections are shown on the support dashboard and turned into HTML (pastes
+ * formatted into an email) and plain text (pastes anywhere) for the owner's "Copy support
+ * details" button. Nothing here makes a network request.
  */
 final class Fixpass_Details {
 
 	/**
-	 * Site information: versions, configuration, plugins and themes.
+	 * Everything captured about the site: configuration, health, plugins and themes.
 	 *
 	 * @return array[] Sections: [ title, rows ], where rows is label => value or a list.
 	 */
 	public static function site_sections() {
-		$env = self::environment();
-		$ext = self::extensions();
-		return array(
-			array( __( 'Site', 'fixpass' ), $env ),
-			array( __( 'Active plugins', 'fixpass' ), $ext['active_plugins'] ),
-			array( __( 'Inactive plugins', 'fixpass' ), $ext['inactive_plugins'] ),
-			array( __( 'Active theme', 'fixpass' ), $ext['active_theme'] ),
-			array( __( 'Other installed themes', 'fixpass' ), $ext['other_themes'] ),
+		$ext      = self::extensions();
+		$sections = array( array( __( 'Site', 'fixpass' ), self::environment() ) );
+		$health   = self::site_health();
+		if ( $health ) {
+			$sections[] = array( __( 'Site Health', 'fixpass' ), $health );
+		}
+		return array_merge(
+			$sections,
+			array(
+				array( __( 'Active plugins', 'fixpass' ), $ext['active_plugins'] ),
+				array( __( 'Inactive plugins', 'fixpass' ), $ext['inactive_plugins'] ),
+				array( __( 'Must-use plugins and drop-ins', 'fixpass' ), $ext['special'] ),
+				array( __( 'Active theme', 'fixpass' ), $ext['active_theme'] ),
+				array( __( 'Other installed themes', 'fixpass' ), $ext['other_themes'] ),
+			)
 		);
 	}
 
 	/**
-	 * One section per spot: the page, the screen and the errors captured with it.
+	 * The owner's description of the problem, if they wrote one.
 	 *
-	 * @param array[] $spots Spots.
-	 * @return array[] Sections.
+	 * @param array $grant The access.
+	 * @return array[] Zero or one section.
 	 */
-	public static function spot_sections( array $spots ) {
-		$sections = array();
-		foreach ( array_values( $spots ) as $n => $spot ) {
-			$rows = array(
-				__( 'Open highlighted', 'fixpass' ) => Fixpass_Spotlight::highlight_url( $spot ),
-				__( 'Page', 'fixpass' )             => $spot['title'] . ' (' . $spot['url'] . ')',
-				__( 'Screen', 'fixpass' )           => (int) $spot['viewport']['w'] . '×' . (int) $spot['viewport']['h'] . ' · ' . $spot['browser'],
-			);
-			foreach ( $spot['errors'] as $i => $e ) {
-				/* translators: %d: error number */
-				$rows[ sprintf( __( 'Error %d', 'fixpass' ), $i + 1 ) ] = $e['message'] . ( '' !== $e['source'] ? ' (' . $e['source'] . ':' . $e['line'] . ')' : '' );
-			}
-			foreach ( $spot['requests'] as $i => $r ) {
-				/* translators: %d: request number */
-				$rows[ sprintf( __( 'Failed request %d', 'fixpass' ), $i + 1 ) ] = $r['method'] . ' ' . $r['url'] . ' → ' . ( $r['status'] ? $r['status'] : __( 'no response', 'fixpass' ) );
-			}
-			/* translators: %d: spot number */
-			$title      = sprintf( __( 'Spot %d', 'fixpass' ), $n + 1 ) . ( '' !== $spot['label'] ? ': ' . $spot['label'] : '' );
-			$sections[] = array( $title, $rows );
-		}
-		return $sections;
+	public static function problem_sections( array $grant ) {
+		$note = trim( (string) ( $grant['note'] ?? '' ) );
+		return '' === $note ? array() : array( array( __( 'The problem, in the site owner’s words', 'fixpass' ), array( $note ) ) );
 	}
 
 	/**
-	 * The message the owner copies: login link, access times, spots and site information.
+	 * The message the owner copies: login link, access times, the problem and the site context.
 	 *
-	 * @param array    $grant The access.
-	 * @param string   $url   The single-use login link.
-	 * @param array[]  $spots Spots.
+	 * @param array  $grant The access.
+	 * @param string $url   The single-use login link.
 	 * @return array { subject, html, text }
 	 */
-	public static function message( array $grant, $url, array $spots ) {
+	public static function message( array $grant, $url ) {
 		$site   = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
 		$format = get_option( 'date_format' ) . ' ' . get_option( 'time_format' );
 
-		$sections   = array(
+		$access   = array(
 			array(
 				__( 'Access', 'fixpass' ),
 				array(
@@ -80,13 +69,14 @@ final class Fixpass_Details {
 					__( 'Granted', 'fixpass' )      => wp_date( $format, (int) $grant['created_at'] ),
 					__( 'Expires', 'fixpass' )      => wp_date( $format, (int) $grant['expires_at'] ),
 					__( 'Access level', 'fixpass' ) => __( 'Administrator (cannot manage users or install themes)', 'fixpass' ),
+					__( 'Details captured', 'fixpass' ) => wp_date( $format ),
 				),
 			),
 		);
-		$sections   = array_merge( $sections, self::spot_sections( $spots ), self::site_sections() );
+		$sections = array_merge( $access, self::problem_sections( $grant ), self::site_sections() );
 		/* translators: %s: site name */
 		$intro = sprintf( __( 'Support access details for %s. Please share this with your support team.', 'fixpass' ), $site );
-		$after = __( 'After logging in, the Support session page shows these details and your spots.', 'fixpass' );
+		$after = __( 'After logging in, the Support session page shows these details.', 'fixpass' );
 		return array(
 			/* translators: %s: site name */
 			'subject' => sprintf( __( 'Support access for %s', 'fixpass' ), $site ),
@@ -96,7 +86,7 @@ final class Fixpass_Details {
 	}
 
 	/**
-	 * HTML for a list of sections, without styling (the support dashboard).
+	 * HTML for a list of sections, without inline styling (the support dashboard).
 	 *
 	 * @param array[] $sections Sections.
 	 * @return string
@@ -228,10 +218,22 @@ final class Fixpass_Details {
 		$flag = static function ( $name ) use ( $yes, $no ) {
 			return defined( $name ) && constant( $name ) ? $yes : $no;
 		};
+
+		$overdue = 0;
+		$cron    = _get_cron_array();
+		if ( is_array( $cron ) ) {
+			foreach ( $cron as $time => $hooks ) {
+				if ( $time < time() - 15 * MINUTE_IN_SECONDS ) {
+					$overdue += count( $hooks );
+				}
+			}
+		}
+
 		return array(
 			__( 'Site address', 'fixpass' )           => home_url( '/' ),
 			__( 'WordPress version', 'fixpass' )      => (string) $wp_version,
 			__( 'PHP version', 'fixpass' )            => PHP_VERSION,
+			__( 'PHP extensions', 'fixpass' )         => implode( ', ', array_intersect( array( 'curl', 'dom', 'exif', 'fileinfo', 'gd', 'imagick', 'intl', 'mbstring', 'mysqli', 'openssl', 'sodium', 'xml', 'zip' ), get_loaded_extensions() ) ),
 			__( 'Database', 'fixpass' )               => method_exists( $wpdb, 'db_server_info' ) ? (string) $wpdb->db_server_info() : (string) $wpdb->db_version(),
 			__( 'Web server', 'fixpass' )             => isset( $_SERVER['SERVER_SOFTWARE'] ) ? sanitize_text_field( wp_unslash( $_SERVER['SERVER_SOFTWARE'] ) ) : '',
 			__( 'Environment type', 'fixpass' )       => wp_get_environment_type(),
@@ -245,10 +247,30 @@ final class Fixpass_Details {
 			__( 'Max execution time', 'fixpass' )     => (string) ini_get( 'max_execution_time' ),
 			__( 'Upload size limit', 'fixpass' )      => size_format( wp_max_upload_size() ),
 			__( 'Object cache', 'fixpass' )           => wp_using_ext_object_cache() ? $yes : $no,
+			__( 'Overdue scheduled tasks', 'fixpass' ) => (string) $overdue,
 			'WP_DEBUG'                                => $flag( 'WP_DEBUG' ),
 			'WP_DEBUG_LOG'                            => $flag( 'WP_DEBUG_LOG' ),
 			'DISABLE_WP_CRON'                         => $flag( 'DISABLE_WP_CRON' ),
 			'DISALLOW_FILE_MODS'                      => $flag( 'DISALLOW_FILE_MODS' ),
+		);
+	}
+
+	/**
+	 * The result of WordPress's own Site Health tests, as WordPress last stored it. Nothing is
+	 * run here, so the section is left out if the tests have never run.
+	 *
+	 * @return array Label => value.
+	 */
+	private static function site_health() {
+		$stored = get_transient( 'health-check-site-status-result' );
+		$result = is_string( $stored ) ? json_decode( $stored, true ) : null;
+		if ( ! is_array( $result ) ) {
+			return array();
+		}
+		return array(
+			__( 'Critical issues', 'fixpass' )          => (string) (int) ( $result['critical'] ?? 0 ),
+			__( 'Recommended improvements', 'fixpass' ) => (string) (int) ( $result['recommended'] ?? 0 ),
+			__( 'Passed tests', 'fixpass' )             => (string) (int) ( $result['good'] ?? 0 ),
 		);
 	}
 
@@ -262,6 +284,7 @@ final class Fixpass_Details {
 		$out = array(
 			'active_plugins'   => array(),
 			'inactive_plugins' => array(),
+			'special'          => array(),
 			'active_theme'     => array(),
 			'other_themes'     => array(),
 		);
@@ -272,6 +295,12 @@ final class Fixpass_Details {
 		foreach ( get_plugins() as $file => $plugin ) {
 			$line = trim( $plugin['Name'] . ' ' . $plugin['Version'] ) . ( isset( $plugin_updates['response'][ $file ] ) ? ' (' . $update . ')' : '' );
 			$out[ is_plugin_active( $file ) ? 'active_plugins' : 'inactive_plugins' ][] = $line;
+		}
+		foreach ( get_mu_plugins() as $plugin ) {
+			$out['special'][] = trim( __( 'Must-use:', 'fixpass' ) . ' ' . $plugin['Name'] . ' ' . $plugin['Version'] );
+		}
+		foreach ( array_keys( get_dropins() ) as $file ) {
+			$out['special'][] = __( 'Drop-in:', 'fixpass' ) . ' ' . $file;
 		}
 		$current = get_stylesheet();
 		foreach ( wp_get_themes() as $slug => $theme ) {

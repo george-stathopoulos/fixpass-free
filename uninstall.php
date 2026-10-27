@@ -43,7 +43,7 @@ function fixpass_uninstall_site() {
 		delete_option( $option );
 	}
 
-	foreach ( array( 'fixpass_access', 'fixpass_ended', 'fixpass_spots', 'fixpass_creating' ) as $option ) {
+	foreach ( array( 'fixpass_access', 'fixpass_ended', 'fixpass_creating' ) as $option ) {
 		delete_option( $option );
 	}
 

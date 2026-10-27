@@ -8,8 +8,9 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The Documentation page: how Fixpass works, what it stores, what support can and can't do,
- * multisite, troubleshooting and the hooks it offers. Plain pages, one per tab, no scripts.
+ * The Documentation page: how Fixpass works, what it captures and stores, what support can and
+ * can't do, multisite, troubleshooting and the hooks it offers. Plain pages, one per tab, no
+ * scripts.
  */
 final class Fixpass_Docs {
 
@@ -22,13 +23,13 @@ final class Fixpass_Docs {
 	 */
 	private static function tabs() {
 		$tabs = array(
-			'start'     => __( 'Getting started', 'fixpass' ),
-			'spotlight' => __( 'Spotlight', 'fixpass' ),
-			'access'    => __( 'Support access', 'fixpass' ),
-			'copy'      => __( 'Copy support details', 'fixpass' ),
-			'support'   => __( 'For support teams', 'fixpass' ),
-			'cleanup'   => __( 'Automatic cleanup', 'fixpass' ),
-			'security'  => __( 'Security and privacy', 'fixpass' ),
+			'start'    => __( 'Getting started', 'fixpass' ),
+			'context'  => __( 'Automatic context capture', 'fixpass' ),
+			'access'   => __( 'Support access', 'fixpass' ),
+			'copy'     => __( 'Copy support details', 'fixpass' ),
+			'support'  => __( 'For support teams', 'fixpass' ),
+			'cleanup'  => __( 'Automatic cleanup', 'fixpass' ),
+			'security' => __( 'Security and privacy', 'fixpass' ),
 		);
 		if ( is_multisite() ) {
 			$tabs['multisite'] = __( 'Multisite', 'fixpass' );
@@ -94,9 +95,9 @@ final class Fixpass_Docs {
 	}
 
 	/**
-	 * Output a bulleted list.
+	 * Output a bulleted or numbered list.
 	 *
-	 * @param string[] $items Items.
+	 * @param string[] $items   Items.
 	 * @param bool     $ordered Numbered.
 	 */
 	private static function ul( array $items, $ordered = false ) {
@@ -128,14 +129,13 @@ final class Fixpass_Docs {
 	 */
 	private static function tab_start() {
 		self::h( __( 'Getting started', 'fixpass' ) );
-		self::p( __( 'Fixpass lets you give your support team temporary access to your site without sharing a password, and shows them exactly what is wrong. It runs entirely on your site: no account, no outside service.', 'fixpass' ) );
-		self::h3( __( 'The four steps', 'fixpass' ) );
+		self::p( __( 'Fixpass lets you give your support team temporary access to your site without sharing a password, and gives them everything they need to start work. It runs entirely on your site: no account, no outside service.', 'fixpass' ) );
+		self::h3( __( 'The three steps', 'fixpass' ) );
 		self::ul(
 			array(
-				__( 'Choose. Open Fixpass in the admin menu. Pick “Show the problem, then give access” (recommended) or “Just give access”.', 'fixpass' ),
-				__( 'Spotlight the problem. Fixpass opens your site. Go to the page that has the problem, click “Spotlight a problem” in the toolbar, then click the broken part or drag a box around it. Add a note and click Continue. You can mark up to 5 spots. You can skip this step.', 'fixpass' ),
-				__( 'Give access. Choose how long access lasts (1 day to 1 week; 3 days is the default) and click “Give access”. Fixpass creates a temporary support account and a single-use login link.', 'fixpass' ),
-				__( 'Copy the details. Click “Copy support details”, then paste into an email or support ticket. That is all support needs to log in.', 'fixpass' ),
+				__( 'Get started. Open Fixpass in the admin menu. It shows what your support team will get automatically. Click Start.', 'fixpass' ),
+				__( 'Give access. Describe what is wrong in a sentence or two (optional), choose how long access lasts (1 day to 1 week; 3 days is the default), and click “Give access”. Fixpass creates a temporary support account and a single-use login link.', 'fixpass' ),
+				__( 'Copy the details. Click “Copy support details”, then paste into an email or support ticket. That is all support needs to log in and start work.', 'fixpass' ),
 			),
 			true
 		);
@@ -146,44 +146,28 @@ final class Fixpass_Docs {
 	}
 
 	/**
-	 * Spotlight.
+	 * Automatic context capture.
 	 */
-	private static function tab_spotlight() {
-		self::h( __( 'Spotlight: automatic context capture', 'fixpass' ) );
-		self::p( __( 'Spotlight replaces the usual back-and-forth of “which page?”, “which browser?” and “what does the error say?”.', 'fixpass' ) );
-		self::h3( __( 'How to use it', 'fixpass' ) );
-		self::ul(
-			array(
-				__( 'While you are logged in as an administrator and no support access is on, a “Spotlight a problem” button appears in the toolbar, on your site and in the admin.', 'fixpass' ),
-				__( 'Click it. The page pauses: links, buttons and menus do nothing, so you cannot leave the page by accident.', 'fixpass' ),
-				__( 'Click the broken part, or drag a box around an area. Add a short note, for example “wrong price”.', 'fixpass' ),
-				__( 'Click “Add another spot” for more (up to 5, all on the same page), or Continue to go back to Fixpass.', 'fixpass' ),
-				__( 'Press Esc or Cancel at any time to stop.', 'fixpass' ),
-			)
-		);
-		self::h3( __( 'What is captured for each spot', 'fixpass' ) );
+	private static function tab_context() {
+		self::h( __( 'Automatic context capture', 'fixpass' ) );
+		self::p( __( 'The usual back-and-forth of “which WordPress version?”, “which plugins?” and “what PHP are you on?” is skipped. Fixpass reads this from your site by itself, at the moment you copy the details, so it is always current. You don’t have to find or collect anything.', 'fixpass' ) );
+		self::h3( __( 'What is captured', 'fixpass' ) );
 		self::table(
 			array(
-				__( 'Page', 'fixpass' )              => __( 'The address and title of the page.', 'fixpass' ),
-				__( 'The spot', 'fixpass' )          => __( 'Where it is on the page, as a path of elements, so support can find it again. For text, a short excerpt of what the element says.', 'fixpass' ),
-				__( 'Your note', 'fixpass' )         => __( 'Up to 80 characters, in your own words.', 'fixpass' ),
-				__( 'Screen and browser', 'fixpass' ) => __( 'Your window size, pixel ratio, and browser name and version.', 'fixpass' ),
-				__( 'Page errors', 'fixpass' )       => __( 'JavaScript errors the page had, up to 20, with the file and line.', 'fixpass' ),
-				__( 'Failed requests', 'fixpass' )   => __( 'Requests the page made that failed or returned an error, up to 20.', 'fixpass' ),
+				__( 'Site', 'fixpass' )             => __( 'Site address; WordPress, PHP and database versions; PHP extensions; web server; environment type; multisite; HTTPS; language and time zone; permalinks; memory, execution time and upload limits; object cache; scheduled tasks that are overdue; and whether WP_DEBUG, WP_DEBUG_LOG, DISABLE_WP_CRON and DISALLOW_FILE_MODS are on.', 'fixpass' ),
+				__( 'Site Health', 'fixpass' )      => __( 'How many critical issues, recommended improvements and passed tests WordPress’s own Site Health last found. Fixpass runs no tests: it only reads the result WordPress stored, and leaves the section out if the tests have never run.', 'fixpass' ),
+				__( 'Plugins', 'fixpass' )          => __( 'Name and version of every installed plugin, whether it is active, and whether an update is waiting.', 'fixpass' ),
+				__( 'Must-use plugins and drop-ins', 'fixpass' ) => __( 'Must-use plugins and drop-ins such as object-cache.php and advanced-cache.php, which often explain odd behaviour.', 'fixpass' ),
+				__( 'Themes', 'fixpass' )           => __( 'The active theme and the other installed themes, with versions and waiting updates.', 'fixpass' ),
+				__( 'Your description', 'fixpass' ) => __( 'What you wrote in “What’s wrong?”, up to 1,000 characters.', 'fixpass' ),
+				__( 'Access', 'fixpass' )           => __( 'When access was given and when it ends, and when the details were captured.', 'fixpass' ),
 			)
 		);
-		self::p( __( 'Errors and failed requests are collected in your browser from the moment the page loads, and kept only in that tab. They are saved to your site only when you pick a spot. Nothing on your screen is recorded: no screenshot, no video, no keystrokes.', 'fixpass' ) );
-		self::h3( __( 'How support sees it', 'fixpass' ) );
-		self::p( __( 'Each spot comes with an “Open highlighted” link. It opens the page itself with a box around the spot. The highlight link only shows where the spot is; it does not give access to anything else.', 'fixpass' ) );
-		self::h3( __( 'Good to know', 'fixpass' ) );
-		self::ul(
-			array(
-				__( 'Spotlight is only offered to administrators, and is hidden while support access is on.', 'fixpass' ),
-				__( 'Spots are deleted when access ends. Spots you picked but never sent are cleared once they are 30 days old, the next time a spot is picked.', 'fixpass' ),
-				__( 'Passwords, keys, tokens and card-like numbers in captured text are replaced with [redacted]; email addresses are shortened to the first letter and the domain.', 'fixpass' ),
-				__( 'If the page changes, the box may not find the exact element. Support then sees a box where it was.', 'fixpass' ),
-			)
-		);
+		self::h3( __( 'What is never captured', 'fixpass' ) );
+		self::p( __( 'Passwords, keys and salts, the contents of wp-config.php or any other file, the debug log, users and their email addresses, posts, pages, orders, form entries or any customer data. Fixpass also reads no browser data from you or your visitors.', 'fixpass' ) );
+		self::h3( __( 'Where it is shown', 'fixpass' ) );
+		self::p( __( 'It goes into the details you copy, and support sees the same information, read live, on the Support session page after logging in. Nothing is saved on your site except your description, which is kept with the access and deleted when access ends.', 'fixpass' ) );
+		self::p( __( 'Secrets in your description (such as text that looks like a password, key or token) are replaced with [redacted] and email addresses are shortened, as a safety net. Still, don’t write passwords in it.', 'fixpass' ) );
 	}
 
 	/**
@@ -237,16 +221,14 @@ final class Fixpass_Docs {
 		self::h( __( 'Copy support details', 'fixpass' ) );
 		self::p( __( 'One button puts everything support needs on your clipboard, formatted for email and as plain text, so it also pastes well into a ticket system.', 'fixpass' ) );
 		self::h3( __( 'What is included', 'fixpass' ) );
-		self::table(
+		self::ul(
 			array(
-				__( 'Access', 'fixpass' )       => __( 'The single-use login link, when access was given and when it ends, and the access level.', 'fixpass' ),
-				__( 'Spots', 'fixpass' )        => __( 'For each spot: the highlight link, the page, screen size and browser, page errors and failed requests.', 'fixpass' ),
-				__( 'Site', 'fixpass' )         => __( 'Site address; WordPress, PHP and database versions; web server; environment type; multisite; HTTPS; language and time zone; permalinks; memory, execution and upload limits; object cache; and whether WP_DEBUG, WP_DEBUG_LOG, DISABLE_WP_CRON and DISALLOW_FILE_MODS are on.', 'fixpass' ),
-				__( 'Plugins and themes', 'fixpass' ) => __( 'Names and versions of all installed plugins and themes, which are active, and which have an update waiting (from what WordPress already knows; Fixpass does not check for updates).', 'fixpass' ),
+				__( 'A button-style link to log in, which works once.', 'fixpass' ),
+				__( 'When access was given and when it ends.', 'fixpass' ),
+				__( 'Your description of the problem, if you wrote one.', 'fixpass' ),
+				__( 'Everything described under “Automatic context capture”.', 'fixpass' ),
 			)
 		);
-		self::h3( __( 'What is never included', 'fixpass' ) );
-		self::p( __( 'Passwords, keys and salts, the contents of wp-config.php, user lists, email addresses, posts, orders, customer data, or the debug log.', 'fixpass' ) );
 		self::h3( __( 'The link is made when you copy', 'fixpass' ) );
 		self::p( __( 'Login links are not stored on your site. The link is shown right after you give access. If you come back later and need the details again, use “Copy support details with a new link”: this makes a new single-use link and the previous one stops working.', 'fixpass' ) );
 		self::h3( __( 'If copying fails', 'fixpass' ) );
@@ -262,9 +244,8 @@ final class Fixpass_Docs {
 		self::ul(
 			array(
 				__( 'Open the link. It shows a page with a “Log in as support” button. Press it; the link is then used up.', 'fixpass' ),
-				__( 'You land on the Support session page. It shows when access ends, the problem as the site owner showed it, and the site details.', 'fixpass' ),
-				__( 'Each spot has an “Open highlighted” link that opens the page with the spot marked, plus the page, the screen size, the browser, and the page errors and failed requests the owner’s browser saw.', 'fixpass' ),
-				__( 'Site details lists versions, configuration, and every plugin and theme with its version and whether an update is waiting.', 'fixpass' ),
+				__( 'You land on the Support session page. It shows when access ends, the problem as the site owner described it, and the site details.', 'fixpass' ),
+				__( 'Site details lists versions, configuration, Site Health results, and every plugin and theme with its version and whether an update is waiting, plus must-use plugins and drop-ins.', 'fixpass' ),
 				__( 'A banner and a toolbar item remind you how long you have left.', 'fixpass' ),
 			)
 		);
@@ -292,7 +273,7 @@ final class Fixpass_Docs {
 			array(
 				__( 'The support account, and its login sessions. Anything it created is given to the administrator who gave access.', 'fixpass' ),
 				__( 'The login link and the record that it was used.', 'fixpass' ),
-				__( 'Your spots, including their notes and captured errors.', 'fixpass' ),
+				__( 'Your description of the problem.', 'fixpass' ),
 				__( 'The scheduled task that ends access.', 'fixpass' ),
 			)
 		);
@@ -318,7 +299,7 @@ final class Fixpass_Docs {
 				__( 'Guessing is rate-limited: 10 wrong links per address per hour.', 'fixpass' ),
 				__( 'Support’s login cookie never outlasts the access.', 'fixpass' ),
 				__( 'Support cannot manage users, install or delete themes, or remove Fixpass, so they cannot leave a back door.', 'fixpass' ),
-				__( 'Only administrators can give access, spotlight a problem, or see the Fixpass setup. Every action is protected by a security check.', 'fixpass' ),
+				__( 'Only administrators can give access or see the Fixpass setup. Every action is protected by a security check.', 'fixpass' ),
 			)
 		);
 		self::p( __( 'Support is still an administrator: they can change plugins, content and settings. Give access only to people you trust, for as short a time as needed.', 'fixpass' ) );
@@ -328,11 +309,11 @@ final class Fixpass_Docs {
 				__( 'Fixpass does not send data to any outside service and does not load scripts, fonts or images from outside your site.', 'fixpass' ),
 				__( 'The details only leave your site when you copy them and send them yourself.', 'fixpass' ),
 				__( 'Fixpass sends one email: to the site’s administration email address, when support logs in. It includes the IP address support logged in from, so you can recognise it.', 'fixpass' ),
-				__( 'Spots are deleted when access ends, and when Fixpass is deleted.', 'fixpass' ),
-				__( 'Fixpass sets no cookies for visitors, and does nothing for visitors who are not logged in as administrators.', 'fixpass' ),
+				__( 'Fixpass shows nothing and sets no cookies for visitors. The only cookie it causes is support’s own login cookie.', 'fixpass' ),
+				__( 'Your description of the problem is deleted when access ends.', 'fixpass' ),
 			)
 		);
-		self::p( __( 'If you are subject to privacy rules, tell your visitors and users who may see their data as you would for any support provider. Fixpass does not give support a list of users, but an administrator can open pages that show user data.', 'fixpass' ) );
+		self::p( __( 'If you are subject to privacy rules, treat support like any other provider with access to your site. Fixpass does not give support a list of users, but an administrator can open pages that show user data.', 'fixpass' ) );
 	}
 
 	/**
@@ -344,7 +325,7 @@ final class Fixpass_Docs {
 		self::h3( __( 'How it works on a network', 'fixpass' ) );
 		self::ul(
 			array(
-				__( 'Each site has its own access, spots, login link and end time. Access on one site never affects another.', 'fixpass' ),
+				__( 'Each site has its own access, description, login link and end time. Access on one site never affects another.', 'fixpass' ),
 				__( 'The support account is made a member of that one site only, as an Administrator. It is never a super admin. On any other site of the network it has no role and no access.', 'fixpass' ),
 				__( 'Because plugins are shared by the whole network, support cannot install or delete plugins on a network (only super admins can), and cannot manage users or install themes.', 'fixpass' ),
 				__( 'The login link opens on the site that created it, and the email about a login goes to that site’s administration email address.', 'fixpass' ),
@@ -353,8 +334,8 @@ final class Fixpass_Docs {
 		self::h3( __( 'Activating Fixpass', 'fixpass' ) );
 		self::table(
 			array(
-				__( 'Network activate', 'fixpass' ) => __( 'Fixpass is available on every site, including sites created later. Super admins also get the Fixpass overview in the Network Admin. “Delete Fixpass when access ends” is not offered, because it cannot be switched off for one site.', 'fixpass' ),
-				__( 'Activate on one site', 'fixpass' ) => __( 'Only that site can use it. “Delete Fixpass when access ends” deactivates Fixpass for that site and removes its data, but never deletes the plugin files, which belong to the whole network.', 'fixpass' ),
+				__( 'Network activate', 'fixpass' )     => __( 'Fixpass is available on every site, including sites created later. Super admins also get the Fixpass overview in the Network Admin. “Delete Fixpass when access ends” is not offered, because it cannot be switched off for one site.', 'fixpass' ),
+				__( 'Activate on one site', 'fixpass' ) => __( 'Only that site can use it. “Switch Fixpass off for this site when access ends” deactivates Fixpass for that site and removes its data, but never deletes the plugin files, which belong to the whole network.', 'fixpass' ),
 			)
 		);
 		self::h3( __( 'Network Admin: Fixpass', 'fixpass' ) );
@@ -382,13 +363,13 @@ final class Fixpass_Docs {
 		self::h( __( 'Troubleshooting', 'fixpass' ) );
 		$faq = array(
 			__( 'Support says the link does not work.', 'fixpass' )             => __( 'Links work once. The link may have been opened and used already, replaced by a newer one, or access may have ended. On the Fixpass page, click “Copy support details with a new link” and send the new details. If the page says access has ended, give access again.', 'fixpass' ),
-			__( 'I do not see Spotlight a problem in the toolbar.', 'fixpass' )  => __( 'You must be logged in as an administrator, the toolbar must be showing (check “Show toolbar when viewing site” in your profile), and no support access may be on. A developer can turn it off with the fixpass_spotlight filter. On multisite, site administrators need the network admin to allow it.', 'fixpass' ),
-			__( 'Spotlight does not find the element I picked.', 'fixpass' )     => __( 'If the page changed after you picked it, or the element is added by a script, the exact element may be missing. Support then sees a box where it was. Pick a larger area, or add a note.', 'fixpass' ),
+			__( 'The Site Health section is missing.', 'fixpass' )              => __( 'Fixpass only reads the result WordPress stored. Open Tools → Site Health once so WordPress runs its tests, then copy the details again.', 'fixpass' ),
 			__( 'Copy support details says copying failed.', 'fixpass' )         => __( 'Your browser may block the clipboard on pages that are not HTTPS. Select the text in the preview and copy it yourself.', 'fixpass' ),
 			__( 'I did not get the “support logged in” email.', 'fixpass' )      => __( 'The email is sent to the site’s administration email address (Settings → General). If your site cannot send email, the Fixpass page still shows when support is logged in.', 'fixpass' ),
 			__( 'The support account is still on the Users screen.', 'fixpass' ) => __( 'It is deleted the moment access ends. If access just ended, reload. If it stays, delete it yourself: that is safe. If scheduled tasks are disabled on your site, load any page of the site once and Fixpass will remove it.', 'fixpass' ),
 			__( 'I cannot start access.', 'fixpass' )                            => __( 'Only one access can be on at a time. End the current one first. If you see “already being created”, wait a few seconds and reload.', 'fixpass' ),
-			__( 'Support cannot install a plugin or theme.', 'fixpass' )         => __( 'Support can never install themes. On multisite they cannot install plugins either. Install it yourself, or ask support to send you what they need.', 'fixpass' ),
+			__( 'I do not see Fixpass in the menu (multisite).', 'fixpass' )     => __( 'The network admin may have limited giving support access to super admins. Ask a super admin, or ask them to allow site administrators in Network Admin → Fixpass.', 'fixpass' ),
+			__( 'Support cannot install a plugin or theme.', 'fixpass' )         => __( 'Support can never install themes. On multisite they cannot install plugins either. Install it yourself, or ask support to tell you what they need.', 'fixpass' ),
 		);
 		foreach ( $faq as $question => $answer ) {
 			echo '<h3>' . esc_html( $question ) . '</h3><p>' . esc_html( $answer ) . '</p>';
@@ -400,34 +381,22 @@ final class Fixpass_Docs {
 	 */
 	private static function tab_developer() {
 		self::h( __( 'For developers', 'fixpass' ) );
-		self::h3( __( 'Filter', 'fixpass' ) );
-		self::table(
-			array(
-				'fixpass_spotlight' => __( 'Return false to hide “Spotlight a problem”. Receives true. Example: add_filter( \'fixpass_spotlight\', \'__return_false\' );', 'fixpass' ),
-			)
-		);
 		self::h3( __( 'What Fixpass stores', 'fixpass' ) );
 		self::table(
 			array(
-				'fixpass_access'                 => __( 'Option, per site: the current access (account ID, hash of the login link, times, status, spots). Removed when access ends.', 'fixpass' ),
-				'fixpass_ended'                  => __( 'Option, per site: when and how the last access ended, to show on the setup screen. Removed when new access is given.', 'fixpass' ),
-				'fixpass_spots'                  => __( 'Option, per site: the spots and their captured context. Removed when access ends.', 'fixpass' ),
-				'fixpass_used_{hash}'            => __( 'Option, per site: marks a login link as used. Removed when access ends.', 'fixpass' ),
-				'fixpass_creating'               => __( 'Option, per site: a short lock while access is being created.', 'fixpass' ),
-				'fixpass_support (user meta)'    => __( 'On the support account: the ID of the site it is for. The account is deleted when access ends.', 'fixpass' ),
+				'fixpass_access'                      => __( 'Option, per site: the current access (account ID, hash of the login link, times, status, your description). Removed when access ends.', 'fixpass' ),
+				'fixpass_ended'                       => __( 'Option, per site: when and how the last access ended, to show on the setup screen. Removed when new access is given.', 'fixpass' ),
+				'fixpass_used_{hash}'                 => __( 'Option, per site: marks a login link as used. Removed when access ends.', 'fixpass' ),
+				'fixpass_creating'                    => __( 'Option, per site: a short lock while access is being created.', 'fixpass' ),
+				'fixpass_support (user meta)'         => __( 'On the support account: the ID of the site it is for. The account is deleted when access ends.', 'fixpass' ),
 				'fixpass_expire, fixpass_self_remove' => __( 'Scheduled tasks: end access, and delete Fixpass when asked.', 'fixpass' ),
 				'fixpass_network_sites, fixpass_allow_site_admins' => __( 'Multisite only, network options: the sites with access now, and whether site administrators may give access.', 'fixpass' ),
 			)
 		);
-		self::p( __( 'Fixpass creates no database tables.', 'fixpass' ) );
-		self::h3( __( 'REST API', 'fixpass' ) );
-		self::table(
-			array(
-				'POST /wp-json/fixpass/v1/spots'      => __( 'Saves spots picked in the browser. Administrators only, with a REST nonce.', 'fixpass' ),
-				'GET /wp-json/fixpass/v1/spots/{id}'  => __( 'Returns where a spot is, for the highlight link. Public, but the 32-character random ID is the key and nothing else is returned.', 'fixpass' ),
-			)
-		);
+		self::p( __( 'Fixpass creates no database tables, adds no files outside its own folder, and has no settings page: there is nothing to configure.', 'fixpass' ) );
 		self::h3( __( 'Capabilities', 'fixpass' ) );
 		self::p( __( 'The owner screens need manage_options (and, on multisite, the network setting that lets site administrators give access). The support account is an Administrator with these capabilities removed: create_users, promote_users, add_users, edit_users, delete_users, remove_users, list_users, manage_network_users, install_themes, delete_themes. It also cannot deactivate or delete Fixpass.', 'fixpass' ) );
+		self::h3( __( 'Login link', 'fixpass' ) );
+		self::p( __( 'The link is wp-login.php?action=fixpass&token=… The token is 64 hexadecimal characters. A request without a valid token shows an error; a valid one shows a confirmation form, and only its POST (with a nonce) logs in.', 'fixpass' ) );
 	}
 }

@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       Fixpass
- * Description:       Give your support team safe, temporary access to your site with a single-use login link, and show them the exact spot that's broken.
+ * Description:       Give your support team safe, temporary access to your site with a single-use login link, and everything they need to start fixing.
  * Version:           1.0.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
@@ -23,7 +23,6 @@ define( 'FIXPASS_URL', plugin_dir_url( __FILE__ ) );
 
 require_once FIXPASS_DIR . 'includes/class-redactor.php';
 require_once FIXPASS_DIR . 'includes/class-access.php';
-require_once FIXPASS_DIR . 'includes/class-spotlight.php';
 require_once FIXPASS_DIR . 'includes/class-details.php';
 require_once FIXPASS_DIR . 'includes/class-docs.php';
 require_once FIXPASS_DIR . 'includes/class-network.php';
