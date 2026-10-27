@@ -1,24 +1,23 @@
 /**
- * Fixpass admin: the "Copy support details" button and confirmation prompts.
+ * Fixpass admin: the copy buttons and confirmation prompts.
  */
 ( function () {
 	'use strict';
 
-	function status( button, text ) {
-		var out = button.parentNode.querySelector( '.fixpass-copy-status' );
+	function status( text ) {
+		var out = document.querySelector( '.fixpass-copy-status' );
 		if ( out ) {
 			out.textContent = text;
 		}
 	}
 
-	// Last resort: select the plain text version and use the browser's copy command.
-	function copyFallback() {
-		var box = document.getElementById( 'fixpass-text' );
-		if ( ! box ) {
+	// Last resort: select a field and use the browser's copy command.
+	function copyFallback( field ) {
+		if ( ! field ) {
 			return false;
 		}
-		box.focus();
-		box.select();
+		field.focus();
+		field.select();
 		try {
 			return document.execCommand( 'copy' );
 		} catch ( e ) {
@@ -26,23 +25,25 @@
 		}
 	}
 
-	function copy( button ) {
+	// Plain text: the login link, or the plain text version of the message.
+	function copyText( field, done, fail ) {
+		var fallback = function () {
+			return copyFallback( field ) ? done() : fail();
+		};
+		if ( navigator.clipboard && navigator.clipboard.writeText ) {
+			navigator.clipboard.writeText( field.value ).then( done, fallback );
+			return;
+		}
+		fallback();
+	}
+
+	// The full message: formatted (for email) and plain text together, where the browser allows.
+	function copyMessage( done, fail ) {
 		var html = document.getElementById( 'fixpass-html' );
 		var text = document.getElementById( 'fixpass-text' );
 		if ( ! html || ! text ) {
 			return;
 		}
-		var done = function () {
-			status( button, button.getAttribute( 'data-copied' ) );
-		};
-		var fail = function () {
-			status( button, button.getAttribute( 'data-failed' ) );
-		};
-		var fallback = function () {
-			return copyFallback() ? done() : fail();
-		};
-
-		// Formatted (for email) and plain text together; plain text alone where that isn't supported.
 		if ( navigator.clipboard && window.ClipboardItem && navigator.clipboard.write ) {
 			navigator.clipboard
 				.write( [
@@ -51,14 +52,29 @@
 						'text/plain': new Blob( [ text.value ], { type: 'text/plain' } ),
 					} ),
 				] )
-				.then( done, fallback );
+				.then( done, function () {
+					copyText( text, done, fail );
+				} );
 			return;
 		}
-		if ( navigator.clipboard && navigator.clipboard.writeText ) {
-			navigator.clipboard.writeText( text.value ).then( done, fallback );
+		copyText( text, done, fail );
+	}
+
+	function copy( button ) {
+		var done = function () {
+			status( button.getAttribute( 'data-copied' ) );
+		};
+		var fail = function () {
+			status( button.getAttribute( 'data-failed' ) );
+		};
+		if ( 'link' === button.getAttribute( 'data-fixpass-copy' ) ) {
+			var link = document.getElementById( 'fixpass-link' );
+			if ( link ) {
+				copyText( link, done, fail );
+			}
 			return;
 		}
-		fallback();
+		copyMessage( done, fail );
 	}
 
 	document.addEventListener( 'click', function ( e ) {

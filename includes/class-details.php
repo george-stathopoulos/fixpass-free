@@ -55,7 +55,7 @@ final class Fixpass_Details {
 	 *
 	 * @param array  $grant The access.
 	 * @param string $url   The single-use login link.
-	 * @return array { subject, html, text }
+	 * @return array { subject, titles, html, text }
 	 */
 	public static function message( array $grant, $url ) {
 		$site   = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
@@ -80,6 +80,7 @@ final class Fixpass_Details {
 		return array(
 			/* translators: %s: site name */
 			'subject' => sprintf( __( 'Support access for %s', 'fixpass' ), $site ),
+			'titles'  => wp_list_pluck( $sections, 0 ),
 			'html'    => self::html( $intro, $url, $sections, $after ),
 			'text'    => self::text( $intro, $sections, $after ),
 		);
@@ -88,28 +89,37 @@ final class Fixpass_Details {
 	/**
 	 * HTML for a list of sections, without inline styling (the support dashboard).
 	 *
-	 * @param array[] $sections Sections.
+	 * @param array[] $sections    Sections.
+	 * @param bool    $collapsible Each section can be opened and closed; the first starts open.
 	 * @return string
 	 */
-	public static function render( array $sections ) {
+	public static function render( array $sections, $collapsible = false ) {
 		$out = '';
-		foreach ( $sections as $section ) {
-			$out .= '<h3>' . esc_html( $section[0] ) . '</h3>';
-			$rows = $section[1];
+		foreach ( array_values( $sections ) as $n => $section ) {
+			$rows  = $section[1];
+			$count = count( $rows );
+			$body  = '';
 			if ( ! $rows ) {
-				$out .= '<p>' . esc_html__( 'None', 'fixpass' ) . '</p>';
+				$body = '<p>' . esc_html__( 'None', 'fixpass' ) . '</p>';
 			} elseif ( self::is_list( $rows ) ) {
-				$out .= '<ul class="fixpass-list">';
+				$body = '<ul class="fixpass-list">';
 				foreach ( $rows as $item ) {
-					$out .= '<li>' . esc_html( $item ) . '</li>';
+					$body .= '<li>' . esc_html( $item ) . '</li>';
 				}
-				$out .= '</ul>';
+				$body .= '</ul>';
 			} else {
-				$out .= '<table class="widefat striped fixpass-table"><tbody>';
+				$body = '<table class="widefat striped fixpass-table"><tbody>';
 				foreach ( $rows as $label => $value ) {
-					$out .= '<tr><th scope="row">' . esc_html( $label ) . '</th><td>' . self::cell( $value ) . '</td></tr>';
+					$body .= '<tr><th scope="row">' . esc_html( $label ) . '</th><td>' . self::cell( $value ) . '</td></tr>';
 				}
-				$out .= '</tbody></table>';
+				$body .= '</tbody></table>';
+			}
+			if ( $collapsible ) {
+				/* translators: %d: number of items in a section */
+				$summary = esc_html( $section[0] ) . ' <span class="fixpass-count">' . esc_html( sprintf( _n( '%d item', '%d items', $count, 'fixpass' ), $count ) ) . '</span>';
+				$out    .= '<details class="fixpass-disclosure"' . ( 0 === $n ? ' open' : '' ) . '><summary>' . $summary . '</summary>' . $body . '</details>';
+			} else {
+				$out .= '<h3>' . esc_html( $section[0] ) . '</h3>' . $body;
 			}
 		}
 		return $out;

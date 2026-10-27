@@ -20,8 +20,8 @@ Fixpass does it in a minute.
 * **Temporary support access.** One click creates a temporary administrator account for your support team. Choose 1 day to 1 week. There is no password: support logs in with a link.
 * **Single-use links.** The login link works once. If support needs to come back, make a new link and the old one stops working. Email scanners that open links can't use it up: it is only used when support presses the login button.
 * **Automatic context capture.** Fixpass reads your site's details for you: WordPress, PHP and database versions, configuration, Site Health results, every plugin and theme with versions and waiting updates, must-use plugins and drop-ins. You just add a sentence about what's wrong.
-* **Copy support details.** One button copies the login link, your description and the captured details, formatted for email and as plain text, ready to paste into a ticket.
-* **Support dashboard.** After logging in, support lands on a Support session page with your description, the site details, and a button to end access.
+* **Copy support details.** Copy the full message (login link, your description and the captured details, formatted for email and as plain text) or just the login link. You can open a preview of exactly what the full message contains before you send it.
+* **Support dashboard.** After logging in, support lands on a Support session page with your description and the site details in sections that open and close, and a button to end access.
 * **Automatic cleanup.** When access ends, by time or because you or support ended it, the support account and its sessions are deleted. Optionally, Fixpass also deactivates and deletes itself, with everything it stored.
 
 = Multisite =

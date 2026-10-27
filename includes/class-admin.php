@@ -277,25 +277,45 @@ final class Fixpass_Admin {
 	private static function render_copy( array $result ) {
 		self::steps( 3 );
 		$grant = Fixpass_Access::active();
-		echo '<div class="notice notice-success inline"><p>' . esc_html__( 'Support access is on. Copy the details and send them to your support team.', 'fixpass' ) . '</p></div>';
-		echo '<div class="fixpass-card"><h2>' . esc_html__( 'Copy support details', 'fixpass' ) . '</h2>';
-		echo '<p>' . esc_html__( 'The login link, your description of the problem, and your site’s details, ready to paste into an email or ticket. Passwords and keys are never included.', 'fixpass' ) . '</p>';
-		echo '<p><button type="button" class="button button-primary button-hero" data-fixpass-copy data-copied="' . esc_attr__( 'Copied!', 'fixpass' ) . '" data-failed="' . esc_attr__( 'Copy failed: select the text below and copy it yourself.', 'fixpass' ) . '">' . esc_html__( 'Copy support details', 'fixpass' ) . '</button> <span class="fixpass-copy-status" role="status"></span></p>';
+		echo '<div class="notice notice-success inline"><p>' . esc_html__( 'Support access is on. Send your support team what they need to log in.', 'fixpass' ) . '</p></div>';
+		echo '<div class="fixpass-card"><h2>' . esc_html__( 'Send this to your support team', 'fixpass' ) . '</h2>';
 		if ( $grant ) {
 			echo '<p class="description">' . esc_html(
 				sprintf(
 					/* translators: %s: date and time */
-					__( 'Access ends on %s.', 'fixpass' ),
+					__( 'Access ends on %s. The link works once.', 'fixpass' ),
 					wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $grant['expires_at'] )
 				)
 			) . '</p>';
 		}
-		echo '<h3>' . esc_html__( 'Preview', 'fixpass' ) . '</h3>';
+		$copied = esc_attr__( 'Copied!', 'fixpass' );
+		$failed = esc_attr__( 'Copy failed: select the text and copy it yourself.', 'fixpass' );
+
+		echo '<div class="fixpass-options">';
+		echo '<div class="fixpass-option fixpass-option--main"><h3>' . esc_html__( 'Full message', 'fixpass' ) . '</h3>';
+		echo '<p>' . esc_html__( 'The login link plus everything support would otherwise ask you for. Formatted for email, and as plain text for tickets.', 'fixpass' ) . '</p>';
+		echo '<button type="button" class="button button-primary button-hero" data-fixpass-copy="message" data-copied="' . $copied . '" data-failed="' . $failed . '">' . esc_html__( 'Copy full message', 'fixpass' ) . '</button></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above.
+		echo '<div class="fixpass-option"><h3>' . esc_html__( 'Login link only', 'fixpass' ) . '</h3>';
+		echo '<p>' . esc_html__( 'Just the single-use link, for when support already has the details.', 'fixpass' ) . '</p>';
+		echo '<input type="text" id="fixpass-link" class="large-text code" readonly value="' . esc_attr( $result['url'] ) . '" aria-label="' . esc_attr__( 'Login link', 'fixpass' ) . '"> ';
+		echo '<button type="button" class="button button-secondary" data-fixpass-copy="link" data-copied="' . $copied . '" data-failed="' . $failed . '">' . esc_html__( 'Copy login link', 'fixpass' ) . '</button></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above.
+		echo '</div>';
+		echo '<p class="fixpass-copy-status" role="status"></p>';
+
+		echo '<details class="fixpass-disclosure"><summary>' . esc_html__( 'Review exactly what the full message contains', 'fixpass' ) . '</summary>';
+		echo '<p class="description">' . esc_html(
+			sprintf(
+				/* translators: %s: list of section names, for example "Access, Site, Active plugins" */
+				__( 'This is the message that is copied, section by section: %s. Nothing else is included, and passwords, keys, users and content never are.', 'fixpass' ),
+				implode( ', ', $result['message']['titles'] )
+			)
+		) . '</p>';
 		echo '<div id="fixpass-html" class="fixpass-preview">';
 		add_filter( 'safe_style_css', array( __CLASS__, 'allow_email_css' ) );
 		echo wp_kses( $result['message']['html'], self::email_tags() );
 		remove_filter( 'safe_style_css', array( __CLASS__, 'allow_email_css' ) );
-		echo '</div>';
+		echo '</div></details>';
+		// Off-screen, outside the disclosure so it can still be selected for copying.
 		echo '<textarea id="fixpass-text" class="fixpass-text" readonly rows="6" aria-label="' . esc_attr__( 'Plain text version', 'fixpass' ) . '">' . esc_textarea( $result['message']['text'] ) . '</textarea>';
 		echo '</div>';
 		echo '<p><a href="' . esc_url( self::url() ) . '">' . esc_html__( 'Back to access status', 'fixpass' ) . '</a></p>';
@@ -411,7 +431,8 @@ final class Fixpass_Admin {
 		echo '</div>';
 
 		echo '<div class="fixpass-card"><h2>' . esc_html__( 'Site details, captured automatically', 'fixpass' ) . '</h2>';
-		echo wp_kses( Fixpass_Details::render( Fixpass_Details::site_sections() ), self::dashboard_tags() );
+		echo '<p class="description">' . esc_html__( 'Open a section to see it. These are read live from the site.', 'fixpass' ) . '</p>';
+		echo wp_kses( Fixpass_Details::render( Fixpass_Details::site_sections(), true ), self::dashboard_tags() );
 		echo '</div>';
 
 		echo '<form method="post" class="fixpass-card" action="' . esc_url( self::url() ) . '" data-fixpass-confirm="' . esc_attr__( 'End access now? Your account will be deleted and you will be logged out.', 'fixpass' ) . '">';
@@ -436,6 +457,12 @@ final class Fixpass_Admin {
 			'table' => array( 'class' => true ),
 			'tbody' => array(),
 			'tr'    => array(),
+			'details' => array(
+				'class' => true,
+				'open'  => true,
+			),
+			'summary' => array(),
+			'span'    => array( 'class' => true ),
 			'th'    => array( 'scope' => true ),
 			'td'    => array(),
 		);
