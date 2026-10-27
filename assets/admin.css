@@ -1,0 +1,21 @@
+/* Fixpass admin screens. */
+.fixpass .fixpass-lead { font-size: 15px; max-width: 720px; }
+.fixpass .fixpass-steps { display: flex; flex-wrap: wrap; gap: 8px 20px; list-style: none; margin: 16px 0 20px; padding: 0; }
+.fixpass .fixpass-steps li { color: #646970; }
+.fixpass .fixpass-steps li span { display: inline-block; width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 50%; background: #dcdcde; color: #1d2327; font-size: 12px; margin-right: 4px; }
+.fixpass .fixpass-steps li.is-current { color: #1d2327; font-weight: 600; }
+.fixpass .fixpass-steps li.is-current span { background: #2271b1; color: #fff; }
+.fixpass .fixpass-steps li.is-done span { background: #00a32a; color: #fff; }
+.fixpass .fixpass-cards { display: flex; flex-wrap: wrap; gap: 16px; max-width: 900px; }
+.fixpass .fixpass-cards .fixpass-card { flex: 1 1 320px; margin: 0; }
+.fixpass .fixpass-card { background: #fff; border: 1px solid #c3c4c7; border-radius: 4px; padding: 4px 20px 16px; margin: 16px 0; max-width: 900px; box-sizing: border-box; }
+.fixpass .fixpass-card--main { border-color: #2271b1; box-shadow: 0 0 0 1px #2271b1; }
+.fixpass .fixpass-list { list-style: disc; margin-left: 20px; }
+.fixpass .fixpass-inline { display: inline-block; margin: 0 8px 0 0; }
+.fixpass .fixpass-status--active { color: #00a32a; }
+.fixpass .fixpass-status--waiting { color: #996800; }
+.fixpass .fixpass-danger { color: #b32d2e; border-color: #b32d2e; }
+.fixpass .fixpass-copy-status { margin-left: 8px; font-weight: 600; }
+.fixpass .fixpass-preview { border: 1px solid #dcdcde; border-radius: 4px; padding: 4px 16px 12px; background: #fff; overflow-wrap: anywhere; }
+.fixpass .fixpass-text { position: absolute; left: -9999px; width: 1px; height: 1px; }
+.fixpass .fixpass-table th { width: 220px; }
