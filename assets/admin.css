@@ -26,3 +26,6 @@
 .fixpass .fixpass-preview { border: 1px solid #dcdcde; border-radius: 4px; padding: 4px 16px 12px; background: #fff; overflow-wrap: anywhere; }
 .fixpass .fixpass-text { position: absolute; left: -9999px; width: 1px; height: 1px; }
 .fixpass .fixpass-table th { width: 220px; }
+.fixpass .fixpass-copy-status.is-warning { color: #b32d2e; }
+.fixpass .fixpass-stale[hidden] { display: none; }
+.fixpass .fixpass-actions .button:disabled { opacity: .55; cursor: not-allowed; }

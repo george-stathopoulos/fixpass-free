@@ -245,6 +245,10 @@ final class Fixpass_Docs {
 				__( 'End access now', 'fixpass' )      => __( 'Ends access at once and deletes the support account.', 'fixpass' ),
 			)
 		);
+		self::h3( __( 'If you reload the page', 'fixpass' ) );
+		self::p( __( 'Reloading the copy screen makes your browser offer to send the form again. If you do, Fixpass recognises it, changes nothing, and tells you so: the link you copied before keeps working. To get a new link, use the buttons.', 'fixpass' ) );
+		self::h3( __( 'If the link on the screen is out of date', 'fixpass' ) );
+		self::p( __( 'Only the newest link works. If you leave the copy screen open, then make a new link (here or in another tab), or support uses the link, the page notices when you come back to it. It shows a warning and turns the copy buttons off, so you never send a link that no longer works. Click “Make a new link” in the warning to get a fresh one.', 'fixpass' ) );
 		self::h3( __( 'If copying fails', 'fixpass' ) );
 		self::p( __( 'Some browsers block copying to the clipboard on pages that are not secure (HTTP). Fixpass then tries a simpler copy; if that fails too, it asks you to select the text and copy it yourself. For the full message, open the review section and copy the text from the preview.', 'fixpass' ) );
 	}
@@ -402,6 +406,8 @@ final class Fixpass_Docs {
 				'fixpass_ended'                       => __( 'Option, per site: when and how the last access ended, to show on the setup screen. Removed when new access is given.', 'fixpass' ),
 				'fixpass_used_{hash}'                 => __( 'Option, per site: marks a login link as used. Removed when access ends.', 'fixpass' ),
 				'fixpass_activation_notice'           => __( 'Transient, 10 minutes: set when Fixpass is activated, so a one-time notice shows where to find it.', 'fixpass' ),
+				'admin-ajax: fixpass_link_state'      => __( 'Owner screens only (administrators, with a nonce): tells the copy buttons whether the link on the screen still works. It receives the link’s secret and answers current, used, replaced or ended. Nothing is stored.', 'fixpass' ),
+				'fixpass_sent'                        => __( 'Option, per site: the IDs of the last few forms that were sent, so reloading a page can’t make a second link. Nothing sensitive.', 'fixpass' ),
 				'fixpass_creating'                    => __( 'Option, per site: a short lock while access is being created.', 'fixpass' ),
 				'fixpass_support (user meta)'         => __( 'On the support account: the ID of the site it is for. The account is deleted when access ends.', 'fixpass' ),
 				'fixpass_expire, fixpass_self_remove' => __( 'Scheduled tasks: end access, and delete Fixpass when asked.', 'fixpass' ),

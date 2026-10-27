@@ -438,6 +438,24 @@ final class Fixpass_Access {
 	}
 
 	/**
+	 * Where a login link stands, for the owner's copy buttons.
+	 *
+	 * @param string $token The secret from the link.
+	 * @return string current (works, unused) | used (support already used it) | replaced (a newer
+	 *                link was made) | ended (no access any more).
+	 */
+	public static function link_state( $token ) {
+		$grant = self::active();
+		if ( ! $grant ) {
+			return 'ended';
+		}
+		if ( ! preg_match( '/^[a-f0-9]{64}$/', (string) $token ) || '' === (string) $grant['token_hash'] || ! hash_equals( (string) $grant['token_hash'], hash( 'sha256', $token ) ) ) {
+			return 'replaced';
+		}
+		return false !== get_option( self::used_option( $grant['token_hash'] ) ) ? 'used' : 'current';
+	}
+
+	/**
 	 * Option that marks a login link as used. add_option() is atomic, so it also guards against
 	 * two requests using the same link at once.
 	 *

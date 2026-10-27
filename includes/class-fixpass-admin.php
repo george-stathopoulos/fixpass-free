@@ -16,6 +16,11 @@ final class Fixpass_Admin {
 	const SLUG = 'fixpass';
 
 	/**
+	 * Option that remembers the last forms that were sent.
+	 */
+	const SENT = 'fixpass_sent';
+
+	/**
 	 * Page hook suffix.
 	 *
 	 * @var string
@@ -43,6 +48,7 @@ final class Fixpass_Admin {
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'assets' ) );
 		add_action( 'admin_notices', array( __CLASS__, 'support_notice' ) );
+		add_action( 'wp_ajax_fixpass_link_state', array( __CLASS__, 'ajax_link_state' ) );
 		add_action( 'admin_bar_menu', array( __CLASS__, 'admin_bar' ), 80 );
 		add_filter( 'plugin_action_links_' . plugin_basename( FIXPASS_FILE ), array( __CLASS__, 'action_links' ) );
 		add_filter( 'manage_users_columns', array( __CLASS__, 'users_column' ) );
@@ -116,6 +122,13 @@ final class Fixpass_Admin {
 			return;
 		}
 
+		// A form that is sent again (the page was reloaded and the browser re-sent it) does nothing the
+		// second time. Otherwise reloading would replace the link you just copied.
+		if ( in_array( $do, array( 'give', 'link', 'link_only' ), true ) && self::already_sent() ) {
+			self::$result = array( 'repeat' => true );
+			return;
+		}
+
 		if ( 'give' === $do ) {
 			$hours        = isset( $_POST['hours'] ) ? absint( $_POST['hours'] ) : Fixpass_Access::DEFAULT_HOURS;
 			$note         = isset( $_POST['note'] ) ? sanitize_textarea_field( wp_unslash( $_POST['note'] ) ) : '';
@@ -140,6 +153,46 @@ final class Fixpass_Admin {
 			wp_safe_redirect( self::url() );
 			exit;
 		}
+	}
+
+	/**
+	 * AJAX: has the login link on the owner's screen been replaced or used? Lets the copy
+	 * buttons warn instead of handing out a link that no longer works.
+	 */
+	public static function ajax_link_state() {
+		check_ajax_referer( 'fixpass_link_state', 'nonce' );
+		if ( ! Fixpass_Access::can_give() || Fixpass_Access::is_support_user( get_current_user_id() ) ) {
+			wp_send_json_error( null, 403 );
+		}
+		$token = isset( $_POST['token'] ) ? sanitize_text_field( wp_unslash( $_POST['token'] ) ) : '';
+		wp_send_json_success( array( 'state' => Fixpass_Access::link_state( $token ) ) );
+	}
+
+	/**
+	 * Whether this exact form was already handled. Each form carries a random ID; the last few are
+	 * remembered.
+	 *
+	 * @return bool
+	 */
+	private static function already_sent() {
+		$id = isset( $_POST['fixpass_rid'] ) ? substr( sanitize_key( wp_unslash( $_POST['fixpass_rid'] ) ), 0, 20 ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- checked in handle().
+		if ( '' === $id ) {
+			return false;
+		}
+		$seen = (array) get_option( self::SENT, array() );
+		if ( in_array( $id, $seen, true ) ) {
+			return true;
+		}
+		$seen[] = $id;
+		update_option( self::SENT, array_slice( $seen, -10 ), false );
+		return false;
+	}
+
+	/**
+	 * The hidden field that tells forms apart. See already_sent().
+	 */
+	private static function rid_field() {
+		echo '<input type="hidden" name="fixpass_rid" value="' . esc_attr( strtolower( wp_generate_password( 20, false ) ) ) . '">';
 	}
 
 	/**
@@ -180,6 +233,9 @@ final class Fixpass_Admin {
 	private static function render_owner() {
 		if ( isset( self::$result['error'] ) ) {
 			echo '<div class="notice notice-error"><p>' . esc_html( self::$result['error']->get_error_message() ) . '</p></div>';
+		}
+		if ( ! empty( self::$result['repeat'] ) ) {
+			echo '<div class="notice notice-info inline"><p>' . esc_html__( 'This page was sent again (for example by reloading it), so nothing was changed. The link you copied before still works. To get a new link, use the buttons below.', 'fixpass' ) . '</p></div>';
 		}
 		if ( isset( self::$result['url'] ) ) {
 			self::render_copy( self::$result );
@@ -251,6 +307,7 @@ final class Fixpass_Admin {
 		echo '<form method="post" class="fixpass-card" action="' . esc_url( self::url() ) . '">';
 		wp_nonce_field( 'fixpass_action', 'fixpass_nonce' );
 		echo '<input type="hidden" name="fixpass_do" value="give">';
+		self::rid_field();
 		echo '<h2>' . esc_html__( 'Give access', 'fixpass' ) . '</h2>';
 		echo '<p><label for="fixpass-note"><strong>' . esc_html__( 'What’s wrong? (optional)', 'fixpass' ) . '</strong></label><br>';
 		echo '<textarea id="fixpass-note" name="note" rows="4" maxlength="1000" class="large-text" placeholder="' . esc_attr__( 'For example: the checkout page shows an error after I click Pay.', 'fixpass' ) . '"></textarea><br>';
@@ -298,7 +355,15 @@ final class Fixpass_Admin {
 		$failed    = esc_attr__( 'Copy failed: select the text and copy it yourself.', 'fixpass' );
 		$only_link = ! empty( $result['only_link'] );
 
-		echo '<div class="fixpass-actions">';
+		echo '<div class="notice notice-warning inline fixpass-stale" hidden><p><span class="fixpass-stale__text"></span> <a href="' . esc_url( self::url() ) . '">' . esc_html__( 'Make a new link', 'fixpass' ) . '</a></p></div>';
+		printf(
+			'<div class="fixpass-actions" data-ajax="%1$s" data-nonce="%2$s" data-used="%3$s" data-replaced="%4$s" data-ended="%5$s">',
+			esc_url( admin_url( 'admin-ajax.php' ) ),
+			esc_attr( wp_create_nonce( 'fixpass_link_state' ) ),
+			esc_attr__( 'Support has already used this link. If they need to log in again, make a new link.', 'fixpass' ),
+			esc_attr__( 'This link was replaced by a newer one and no longer works.', 'fixpass' ),
+			esc_attr__( 'Support access has ended.', 'fixpass' )
+		);
 		if ( ! $only_link ) {
 			echo '<button type="button" class="button button-primary button-hero" data-fixpass-copy="message" data-copied="' . $copied . '" data-failed="' . $failed . '">' . esc_html__( 'Copy full message', 'fixpass' ) . '</button>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above.
 		}
@@ -360,11 +425,13 @@ final class Fixpass_Admin {
 		echo '<form method="post" action="' . esc_url( self::url() ) . '" class="fixpass-inline">';
 		wp_nonce_field( 'fixpass_action', 'fixpass_nonce' );
 		echo '<input type="hidden" name="fixpass_do" value="link">';
+		self::rid_field();
 		echo '<button type="submit" class="button button-primary">' . esc_html__( 'Copy full message with a new link', 'fixpass' ) . '</button>';
 		echo '</form> ';
 		echo '<form method="post" action="' . esc_url( self::url() ) . '" class="fixpass-inline">';
 		wp_nonce_field( 'fixpass_action', 'fixpass_nonce' );
 		echo '<input type="hidden" name="fixpass_do" value="link_only">';
+		self::rid_field();
 		echo '<button type="submit" class="button button-secondary">' . esc_html__( 'Copy new login link', 'fixpass' ) . '</button>';
 		echo '</form> ';
 		echo '<form method="post" action="' . esc_url( self::url() ) . '" class="fixpass-inline" data-fixpass-confirm="' . esc_attr__( 'End support access now? The support account will be deleted.', 'fixpass' ) . '">';

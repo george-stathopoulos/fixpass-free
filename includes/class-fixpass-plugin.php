@@ -95,7 +95,7 @@ final class Fixpass_Plugin {
 		foreach ( (array) $used as $option ) {
 			delete_option( $option );
 		}
-		foreach ( array( Fixpass_Access::OPTION, Fixpass_Access::ENDED, 'fixpass_creating' ) as $option ) {
+		foreach ( array( Fixpass_Access::OPTION, Fixpass_Access::ENDED, 'fixpass_creating', Fixpass_Admin::SENT ) as $option ) {
 			delete_option( $option );
 		}
 		delete_transient( self::NOTICE );
