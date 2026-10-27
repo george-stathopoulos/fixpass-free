@@ -62,6 +62,10 @@ final class Fixpass_Plugin {
 		require_once ABSPATH . 'wp-admin/includes/file.php';
 		$file = plugin_basename( FIXPASS_FILE );
 		deactivate_plugins( $file, true );
+		// Never delete a source checkout (a developer's copy): only real installs are deleted.
+		if ( file_exists( FIXPASS_DIR . '.git' ) ) {
+			return;
+		}
 		delete_plugins( array( $file ) );
 	}
 
