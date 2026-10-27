@@ -129,6 +129,12 @@ final class Fixpass_Admin {
 			} else {
 				self::$result = self::copy_result( $grant, $url );
 			}
+		} elseif ( 'link_only' === $do ) {
+			$url = Fixpass_Access::new_link();
+			self::$result = is_wp_error( $url ) ? array( 'error' => $url ) : array(
+				'url'       => $url,
+				'only_link' => true,
+			);
 		} elseif ( 'end' === $do ) {
 			Fixpass_Access::revoke( 'revoked' );
 			wp_safe_redirect( self::url() );
@@ -175,7 +181,7 @@ final class Fixpass_Admin {
 		if ( isset( self::$result['error'] ) ) {
 			echo '<div class="notice notice-error"><p>' . esc_html( self::$result['error']->get_error_message() ) . '</p></div>';
 		}
-		if ( isset( self::$result['message'] ) ) {
+		if ( isset( self::$result['url'] ) ) {
 			self::render_copy( self::$result );
 			return;
 		}
@@ -288,35 +294,41 @@ final class Fixpass_Admin {
 				)
 			) . '</p>';
 		}
-		$copied = esc_attr__( 'Copied!', 'fixpass' );
-		$failed = esc_attr__( 'Copy failed: select the text and copy it yourself.', 'fixpass' );
+		$copied    = esc_attr__( 'Copied!', 'fixpass' );
+		$failed    = esc_attr__( 'Copy failed: select the text and copy it yourself.', 'fixpass' );
+		$only_link = ! empty( $result['only_link'] );
 
-		echo '<div class="fixpass-options">';
-		echo '<div class="fixpass-option fixpass-option--main"><h3>' . esc_html__( 'Full message', 'fixpass' ) . '</h3>';
-		echo '<p>' . esc_html__( 'The login link plus everything support would otherwise ask you for. Formatted for email, and as plain text for tickets.', 'fixpass' ) . '</p>';
-		echo '<button type="button" class="button button-primary button-hero" data-fixpass-copy="message" data-copied="' . $copied . '" data-failed="' . $failed . '">' . esc_html__( 'Copy full message', 'fixpass' ) . '</button></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above.
-		echo '<div class="fixpass-option"><h3>' . esc_html__( 'Login link only', 'fixpass' ) . '</h3>';
-		echo '<p>' . esc_html__( 'Just the single-use link, for when support already has the details.', 'fixpass' ) . '</p>';
-		echo '<input type="text" id="fixpass-link" class="large-text code" readonly value="' . esc_attr( $result['url'] ) . '" aria-label="' . esc_attr__( 'Login link', 'fixpass' ) . '"> ';
-		echo '<button type="button" class="button button-secondary" data-fixpass-copy="link" data-copied="' . $copied . '" data-failed="' . $failed . '">' . esc_html__( 'Copy login link', 'fixpass' ) . '</button></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above.
+		echo '<div class="fixpass-actions">';
+		if ( ! $only_link ) {
+			echo '<button type="button" class="button button-primary button-hero" data-fixpass-copy="message" data-copied="' . $copied . '" data-failed="' . $failed . '">' . esc_html__( 'Copy full message', 'fixpass' ) . '</button>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above.
+		}
+		echo '<button type="button" class="button button-hero ' . ( $only_link ? 'button-primary' : 'button-secondary' ) . '" data-fixpass-copy="link" data-copied="' . $copied . '" data-failed="' . $failed . '">' . esc_html__( 'Copy login link', 'fixpass' ) . '</button>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above.
 		echo '</div>';
+		echo '<p class="description">' . esc_html(
+			$only_link
+				? __( 'A new login link is ready. The previous link no longer works.', 'fixpass' )
+				: __( 'Full message: the login link plus everything support would otherwise ask you for. Login link: only the single-use link, for when support already has the details.', 'fixpass' )
+		) . '</p>';
+		// Off-screen, outside the disclosure, so they can still be selected for copying.
+		echo '<input type="text" id="fixpass-link" class="fixpass-text" readonly value="' . esc_attr( $result['url'] ) . '" aria-label="' . esc_attr__( 'Login link', 'fixpass' ) . '" tabindex="-1">';
 		echo '<p class="fixpass-copy-status" role="status"></p>';
 
-		echo '<details class="fixpass-disclosure"><summary>' . esc_html__( 'Review exactly what the full message contains', 'fixpass' ) . '</summary>';
-		echo '<p class="description">' . esc_html(
-			sprintf(
-				/* translators: %s: list of section names, for example "Access, Site, Active plugins" */
-				__( 'This is the message that is copied, section by section: %s. Nothing else is included, and passwords, keys, users and content never are.', 'fixpass' ),
-				implode( ', ', $result['message']['titles'] )
-			)
-		) . '</p>';
-		echo '<div id="fixpass-html" class="fixpass-preview">';
-		add_filter( 'safe_style_css', array( __CLASS__, 'allow_email_css' ) );
-		echo wp_kses( $result['message']['html'], self::email_tags() );
-		remove_filter( 'safe_style_css', array( __CLASS__, 'allow_email_css' ) );
-		echo '</div></details>';
-		// Off-screen, outside the disclosure so it can still be selected for copying.
-		echo '<textarea id="fixpass-text" class="fixpass-text" readonly rows="6" aria-label="' . esc_attr__( 'Plain text version', 'fixpass' ) . '">' . esc_textarea( $result['message']['text'] ) . '</textarea>';
+		if ( ! $only_link ) {
+			echo '<details class="fixpass-disclosure"><summary>' . esc_html__( 'Review exactly what the full message contains', 'fixpass' ) . '</summary>';
+			echo '<p class="description">' . esc_html(
+				sprintf(
+					/* translators: %s: list of section names, for example "Access, Site, Active plugins" */
+					__( 'This is the message that is copied, section by section: %s. Nothing else is included, and passwords, keys, users and content never are.', 'fixpass' ),
+					implode( ', ', $result['message']['titles'] )
+				)
+			) . '</p>';
+			echo '<div id="fixpass-html" class="fixpass-preview">';
+			add_filter( 'safe_style_css', array( __CLASS__, 'allow_email_css' ) );
+			echo wp_kses( $result['message']['html'], self::email_tags() );
+			remove_filter( 'safe_style_css', array( __CLASS__, 'allow_email_css' ) );
+			echo '</div></details>';
+			echo '<textarea id="fixpass-text" class="fixpass-text" readonly rows="6" tabindex="-1" aria-label="' . esc_attr__( 'Plain text version', 'fixpass' ) . '">' . esc_textarea( $result['message']['text'] ) . '</textarea>';
+		}
 		echo '</div>';
 		echo '<p><a href="' . esc_url( self::url() ) . '">' . esc_html__( 'Back to access status', 'fixpass' ) . '</a></p>';
 	}
@@ -348,14 +360,19 @@ final class Fixpass_Admin {
 		echo '<form method="post" action="' . esc_url( self::url() ) . '" class="fixpass-inline">';
 		wp_nonce_field( 'fixpass_action', 'fixpass_nonce' );
 		echo '<input type="hidden" name="fixpass_do" value="link">';
-		echo '<button type="submit" class="button button-primary">' . esc_html__( 'Copy support details with a new link', 'fixpass' ) . '</button> ';
+		echo '<button type="submit" class="button button-primary">' . esc_html__( 'Copy full message with a new link', 'fixpass' ) . '</button>';
+		echo '</form> ';
+		echo '<form method="post" action="' . esc_url( self::url() ) . '" class="fixpass-inline">';
+		wp_nonce_field( 'fixpass_action', 'fixpass_nonce' );
+		echo '<input type="hidden" name="fixpass_do" value="link_only">';
+		echo '<button type="submit" class="button button-secondary">' . esc_html__( 'Copy new login link', 'fixpass' ) . '</button>';
 		echo '</form> ';
 		echo '<form method="post" action="' . esc_url( self::url() ) . '" class="fixpass-inline" data-fixpass-confirm="' . esc_attr__( 'End support access now? The support account will be deleted.', 'fixpass' ) . '">';
 		wp_nonce_field( 'fixpass_action', 'fixpass_nonce' );
 		echo '<input type="hidden" name="fixpass_do" value="end">';
 		echo '<button type="submit" class="button button-secondary fixpass-danger">' . esc_html__( 'End access now', 'fixpass' ) . '</button>';
 		echo '</form>';
-		echo '<p class="description">' . esc_html__( 'A new link replaces the old one. The old link stops working.', 'fixpass' ) . '</p></div>';
+		echo '<p class="description">' . esc_html__( 'A new link replaces the old one. The old link stops working. “Copy full message” includes the site details; “Copy new login link” is just the link.', 'fixpass' ) . '</p></div>';
 	}
 
 	/**

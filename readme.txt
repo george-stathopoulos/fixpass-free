@@ -70,7 +70,7 @@ Support gets an administrator account, so they can fix problems. They cannot man
 
 = What if the link doesn't work for support? =
 
-Links work once. Open Fixpass, choose "Copy support details with a new link", and send the new details.
+Links work once. Open Fixpass and choose "Copy new login link" (just the link) or "Copy full message with a new link", and send it to support.
 
 = Does it work on multisite? =
 

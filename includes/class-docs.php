@@ -199,7 +199,7 @@ final class Fixpass_Docs {
 				__( 'The link looks like your login page with a long random code. The code is 256 bits long; your site keeps only a one-way hash of it.', 'fixpass' ),
 				__( 'Opening the link shows a page with a “Log in as support” button. Only pressing that button uses the link up. Email security scanners that open links automatically cannot use it.', 'fixpass' ),
 				__( 'After it is used, it never works again. A link also stops working when access ends or when you make a new link.', 'fixpass' ),
-				__( 'If support needs to log in again, click “Copy support details with a new link” on the Fixpass page. The old link stops working.', 'fixpass' ),
+				__( 'If support needs to log in again, click “Copy new login link” (just the link) or “Copy full message with a new link” on the Fixpass page. The old link stops working.', 'fixpass' ),
 				__( 'A wrong or used link is counted: after 10 from one address in an hour, that address is blocked for the hour.', 'fixpass' ),
 			)
 		);
@@ -237,10 +237,17 @@ final class Fixpass_Docs {
 				__( 'Everything described under “Automatic context capture”: the site, Site Health, plugins, must-use plugins and drop-ins, and themes.', 'fixpass' ),
 			)
 		);
-		self::h3( __( 'The link is made when you copy', 'fixpass' ) );
-		self::p( __( 'Login links are not stored on your site. The link is shown right after you give access. If you come back later and need it again, use “Copy support details with a new link” on the status screen: this makes a new single-use link and the previous one stops working.', 'fixpass' ) );
+		self::h3( __( 'Later, from the status screen', 'fixpass' ) );
+		self::p( __( 'Login links are not stored on your site: the link is only shown right after it is made. While access is on, the Fixpass page shows three actions. Each of the first two makes a new single-use link, and the previous link stops working.', 'fixpass' ) );
+		self::table(
+			array(
+				__( 'Copy full message with a new link', 'fixpass' ) => __( 'Makes a new link and shows the same screen as after giving access, with the full message and a preview. The details are captured again, so they are current.', 'fixpass' ),
+				__( 'Copy new login link', 'fixpass' )               => __( 'Makes a new link and shows only a “Copy login link” button. Use it when support already has the details and just needs another way in, for example because the first link was used.', 'fixpass' ),
+				__( 'End access now', 'fixpass' )                    => __( 'Ends access at once and deletes the support account.', 'fixpass' ),
+			)
+		);
 		self::h3( __( 'If copying fails', 'fixpass' ) );
-		self::p( __( 'Some browsers block copying to the clipboard on pages that are not secure (HTTP). Fixpass then tries a simpler copy; if that fails too, it asks you to select the text and copy it yourself. The login link is in a box you can click into and copy from.', 'fixpass' ) );
+		self::p( __( 'Some browsers block copying to the clipboard on pages that are not secure (HTTP). Fixpass then tries a simpler copy; if that fails too, it asks you to select the text and copy it yourself. For the full message, open the review section and copy the text from the preview.', 'fixpass' ) );
 	}
 
 	/**
@@ -370,9 +377,9 @@ final class Fixpass_Docs {
 	private static function tab_faq() {
 		self::h( __( 'Troubleshooting', 'fixpass' ) );
 		$faq = array(
-			__( 'Support says the link does not work.', 'fixpass' )             => __( 'Links work once. The link may have been opened and used already, replaced by a newer one, or access may have ended. On the Fixpass page, click “Copy support details with a new link” and send the new details. If the page says access has ended, give access again.', 'fixpass' ),
+			__( 'Support says the link does not work.', 'fixpass' )             => __( 'Links work once. The link may have been opened and used already, replaced by a newer one, or access may have ended. On the Fixpass page, click “Copy full message with a new link” and send the new details. If the page says access has ended, give access again.', 'fixpass' ),
 			__( 'The Site Health section is missing.', 'fixpass' )              => __( 'Fixpass only reads the result WordPress stored. Open Tools → Site Health once so WordPress runs its tests, then copy the details again.', 'fixpass' ),
-			__( 'Copying failed.', 'fixpass' )                                   => __( 'Your browser may block the clipboard on pages that are not HTTPS. For the login link, click into the link box and copy it. For the full message, open “Review exactly what the full message contains” and copy the text from the preview.', 'fixpass' ),
+			__( 'Copying failed.', 'fixpass' )                                   => __( 'Your browser may block the clipboard on pages that are not HTTPS. For the full message, open “Review exactly what the full message contains” and copy the text from the preview. If the “Copy login link” button fails, allow clipboard access for the page and press it again, or open the site admin over HTTPS.', 'fixpass' ),
 			__( 'I did not get the “support logged in” email.', 'fixpass' )      => __( 'The email is sent to the site’s administration email address (Settings → General). If your site cannot send email, the Fixpass page still shows when support is logged in.', 'fixpass' ),
 			__( 'The support account is still on the Users screen.', 'fixpass' ) => __( 'It is deleted the moment access ends. If access just ended, reload. If it stays, delete it yourself: that is safe. If scheduled tasks are disabled on your site, load any page of the site once and Fixpass will remove it.', 'fixpass' ),
 			__( 'I cannot start access.', 'fixpass' )                            => __( 'Only one access can be on at a time. End the current one first. If you see “already being created”, wait a few seconds and reload.', 'fixpass' ),
