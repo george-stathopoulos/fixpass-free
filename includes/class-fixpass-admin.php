@@ -132,7 +132,7 @@ final class Fixpass_Admin {
 		if ( 'give' === $do ) {
 			$hours        = isset( $_POST['hours'] ) ? absint( $_POST['hours'] ) : Fixpass_Access::DEFAULT_HOURS;
 			$note         = isset( $_POST['note'] ) ? sanitize_textarea_field( wp_unslash( $_POST['note'] ) ) : '';
-			$out          = Fixpass_Access::create( $hours, ! empty( $_POST['cleanup'] ), $note );
+			$out          = Fixpass_Access::create( $hours, $note );
 			self::$result = is_wp_error( $out ) ? array( 'error' => $out ) : self::copy_result( $out['grant'], $out['url'] );
 		} elseif ( 'link' === $do ) {
 			$grant = Fixpass_Access::active();
@@ -317,13 +317,6 @@ final class Fixpass_Admin {
 			echo '<option value="' . esc_attr( $hours ) . '"' . selected( Fixpass_Access::DEFAULT_HOURS, $hours, false ) . '>' . esc_html( $label ) . '</option>';
 		}
 		echo '</select></p>';
-		if ( Fixpass_Access::can_self_remove() ) {
-			$label = is_multisite() ? __( 'Switch Fixpass off for this site when access ends', 'fixpass' ) : __( 'Delete Fixpass when access ends', 'fixpass' );
-			$help  = is_multisite()
-				? __( 'Fixpass deactivates itself on this site and removes what it stored here. The plugin files stay, because other sites on the network may use them.', 'fixpass' )
-				: __( 'Fixpass deactivates and deletes itself, with everything it stored. Without this, Fixpass stays installed and only the support account is deleted.', 'fixpass' );
-			echo '<p><label><input type="checkbox" name="cleanup" value="1"> ' . esc_html( $label ) . '</label><br><span class="description">' . esc_html( $help ) . '</span></p>';
-		}
 		echo '<ul class="fixpass-list"><li>' . esc_html__( 'Support gets an administrator account with a login link instead of a password.', 'fixpass' ) . '</li>';
 		echo '<li>' . esc_html__( 'The link works once. You can make a new one at any time.', 'fixpass' ) . '</li>';
 		echo '<li>' . esc_html__( 'Support cannot manage users or install themes, and cannot remove Fixpass.', 'fixpass' ) . '</li>';
@@ -419,9 +412,6 @@ final class Fixpass_Admin {
 				human_time_diff( time(), (int) $grant['expires_at'] )
 			)
 		) . '</p>';
-		if ( ! empty( $grant['cleanup'] ) ) {
-			echo '<p>' . esc_html( is_multisite() ? __( 'Fixpass will also switch itself off for this site when access ends.', 'fixpass' ) : __( 'Fixpass will also delete itself when access ends.', 'fixpass' ) ) . '</p>';
-		}
 		echo '<form method="post" action="' . esc_url( self::url() ) . '" class="fixpass-inline">';
 		wp_nonce_field( 'fixpass_action', 'fixpass_nonce' );
 		echo '<input type="hidden" name="fixpass_do" value="link">';

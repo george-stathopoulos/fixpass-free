@@ -49,9 +49,7 @@ function fixpass_uninstall_site() {
 
 	delete_transient( 'fixpass_activation_notice' );
 
-	foreach ( array( 'fixpass_expire', 'fixpass_self_remove' ) as $hook ) {
-		wp_clear_scheduled_hook( $hook );
-	}
+	wp_clear_scheduled_hook( 'fixpass_expire' );
 }
 
 if ( is_multisite() ) {

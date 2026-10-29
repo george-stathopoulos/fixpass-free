@@ -297,10 +297,8 @@ final class Fixpass_Docs {
 		);
 		self::h3( __( 'Even if the scheduled task does not run', 'fixpass' ) );
 		self::p( __( 'WordPress runs scheduled tasks when someone visits. Fixpass does not depend on that for safety: the support account is treated as logged out the moment its time is up, and Fixpass checks the end time on every page load and removes the account as soon as it can.', 'fixpass' ) );
-		self::h3( __( 'Delete Fixpass when access ends (optional)', 'fixpass' ) );
-		self::p( __( 'If you tick this when giving access, shortly after access ends (WordPress runs the task on the next visit to your site) Fixpass deactivates itself and deletes itself, which also removes everything it stored. On hosts where WordPress needs FTP details to delete plugins, Fixpass stays installed but deactivated. On a multisite network, see the Multisite tab.', 'fixpass' ) );
-		self::h3( __( 'Uninstalling', 'fixpass' ) );
-		self::p( __( 'Deleting Fixpass from the Plugins screen removes any support account and everything Fixpass stored. See the “For developers” tab for the full list.', 'fixpass' ) );
+		self::h3( __( 'Fixpass itself', 'fixpass' ) );
+		self::p( __( 'Fixpass stays installed after access ends, ready for next time. It does nothing until you give access again. When you no longer need it, deactivate and delete it on the Plugins screen: that removes any support account and everything Fixpass stored. See the “For developers” tab for the full list.', 'fixpass' ) );
 	}
 
 	/**
@@ -352,8 +350,8 @@ final class Fixpass_Docs {
 		self::h3( __( 'Activating Fixpass', 'fixpass' ) );
 		self::table(
 			array(
-				__( 'Network activate', 'fixpass' )     => __( 'Fixpass is available on every site, including sites created later. Super admins also get the Fixpass overview in the Network Admin. “Delete Fixpass when access ends” is not offered, because it cannot be switched off for one site.', 'fixpass' ),
-				__( 'Activate on one site', 'fixpass' ) => __( 'Only that site can use it. “Switch Fixpass off for this site when access ends” deactivates Fixpass for that site and removes its data, but never deletes the plugin files, which belong to the whole network.', 'fixpass' ),
+				__( 'Network activate', 'fixpass' )     => __( 'Fixpass is available on every site, including sites created later. Super admins also get the Fixpass overview in the Network Admin.', 'fixpass' ),
+				__( 'Activate on one site', 'fixpass' ) => __( 'Only that site can use it. The other sites don’t see Fixpass at all.', 'fixpass' ),
 			)
 		);
 		self::h3( __( 'Network Admin: Fixpass', 'fixpass' ) );
@@ -402,15 +400,15 @@ final class Fixpass_Docs {
 		self::h3( __( 'What Fixpass stores', 'fixpass' ) );
 		self::table(
 			array(
-				'fixpass_access'                      => __( 'Option, per site: the current access (account ID, hash of the login link, times, status, your description). Removed when access ends.', 'fixpass' ),
-				'fixpass_ended'                       => __( 'Option, per site: when and how the last access ended, to show on the setup screen. Removed when new access is given.', 'fixpass' ),
-				'fixpass_used_{hash}'                 => __( 'Option, per site: marks a login link as used. Removed when access ends.', 'fixpass' ),
-				'fixpass_activation_notice'           => __( 'Transient, 10 minutes: set when Fixpass is activated, so a one-time notice shows where to find it.', 'fixpass' ),
-				'admin-ajax: fixpass_link_state'      => __( 'Owner screens only (administrators, with a nonce): tells the copy buttons whether the link on the screen still works. It receives the link’s secret and answers current, used, replaced or ended. Nothing is stored.', 'fixpass' ),
-				'fixpass_sent'                        => __( 'Option, per site: the IDs of the last few forms that were sent, so reloading a page can’t make a second link. Nothing sensitive.', 'fixpass' ),
-				'fixpass_creating'                    => __( 'Option, per site: a short lock while access is being created.', 'fixpass' ),
-				'fixpass_support (user meta)'         => __( 'On the support account: the ID of the site it is for. The account is deleted when access ends.', 'fixpass' ),
-				'fixpass_expire, fixpass_self_remove' => __( 'Scheduled tasks: end access, and delete Fixpass when asked.', 'fixpass' ),
+				'fixpass_access'                 => __( 'Option, per site: the current access (account ID, hash of the login link, times, status, your description). Removed when access ends.', 'fixpass' ),
+				'fixpass_ended'                  => __( 'Option, per site: when and how the last access ended, to show on the setup screen. Removed when new access is given.', 'fixpass' ),
+				'fixpass_used_{hash}'            => __( 'Option, per site: marks a login link as used. Removed when access ends.', 'fixpass' ),
+				'fixpass_activation_notice'      => __( 'Transient, 10 minutes: set when Fixpass is activated, so a one-time notice shows where to find it.', 'fixpass' ),
+				'admin-ajax: fixpass_link_state' => __( 'Owner screens only (administrators, with a nonce): tells the copy buttons whether the link on the screen still works. It receives the link’s secret and answers current, used, replaced or ended. Nothing is stored.', 'fixpass' ),
+				'fixpass_sent'                   => __( 'Option, per site: the IDs of the last few forms that were sent, so reloading a page can’t make a second link. Nothing sensitive.', 'fixpass' ),
+				'fixpass_creating'               => __( 'Option, per site: a short lock while access is being created.', 'fixpass' ),
+				'fixpass_support (user meta)'    => __( 'On the support account: the ID of the site it is for. The account is deleted when access ends.', 'fixpass' ),
+				'fixpass_expire'                 => __( 'Scheduled task: ends access at its end time. Cleared when access ends.', 'fixpass' ),
 				'fixpass_network_sites, fixpass_allow_site_admins' => __( 'Multisite only, network options: the sites with access now, and whether site administrators may give access.', 'fixpass' ),
 			)
 		);

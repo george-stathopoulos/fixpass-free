@@ -137,23 +137,6 @@ final class Fixpass_Access {
 	}
 
 	/**
-	 * Whether "Delete Fixpass when access ends" is offered. Plugin files are shared by every site
-	 * on a network, so there it only switches Fixpass off for this site and removes its data; and
-	 * when the network activated Fixpass, it can't be switched off for one site at all.
-	 *
-	 * @return bool
-	 */
-	public static function can_self_remove() {
-		if ( ! is_multisite() ) {
-			return true;
-		}
-		if ( ! function_exists( 'is_plugin_active_for_network' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/plugin.php';
-		}
-		return ! is_plugin_active_for_network( plugin_basename( FIXPASS_FILE ) );
-	}
-
-	/**
 	 * Multisite: note that this site has (or no longer has) support access, for the network list.
 	 *
 	 * @param int $expires_at End time, or 0 when access ended.
@@ -225,12 +208,11 @@ final class Fixpass_Access {
 	/**
 	 * Create the temporary account and its first login link.
 	 *
-	 * @param int    $hours   Access length (one of durations()).
-	 * @param bool   $cleanup Delete Fixpass once access ends.
-	 * @param string $note    The owner's description of the problem, for support.
+	 * @param int    $hours Access length (one of durations()).
+	 * @param string $note  The owner's description of the problem, for support.
 	 * @return array|WP_Error { url, grant }
 	 */
-	public static function create( $hours, $cleanup, $note = '' ) {
+	public static function create( $hours, $note = '' ) {
 		$hours = isset( self::durations()[ (int) $hours ] ) ? (int) $hours : self::DEFAULT_HOURS;
 
 		// Two clicks landing at the same instant must not make two accounts. add_option() is atomic
@@ -260,7 +242,6 @@ final class Fixpass_Access {
 					'created_at' => time(),
 					'expires_at' => $expires,
 					'created_by' => get_current_user_id(),
-					'cleanup'    => (bool) $cleanup && self::can_self_remove(),
 					'status'     => 'waiting',
 					'note'       => Fixpass_Redactor::text( mb_substr( sanitize_textarea_field( (string) $note ), 0, 1000 ) ),
 				),
@@ -268,7 +249,6 @@ final class Fixpass_Access {
 			);
 			self::register_site( $expires );
 			delete_option( self::ENDED );
-			wp_clear_scheduled_hook( Fixpass_Plugin::SELF_REMOVE );
 			wp_schedule_single_event( $expires + MINUTE_IN_SECONDS, self::EXPIRE );
 			return array(
 				'url'   => self::new_link(),
@@ -333,8 +313,7 @@ final class Fixpass_Access {
 	}
 
 	/**
-	 * End the access now: delete the support account and its sessions, and (if the owner asked)
-	 * schedule Fixpass's own removal.
+	 * End the access now: delete the support account and its sessions, and forget the login link.
 	 *
 	 * @param string $reason revoked | expired | support_ended | deactivated | replaced.
 	 */
@@ -390,10 +369,6 @@ final class Fixpass_Access {
 			),
 			false
 		);
-		// The owner asked for Fixpass to remove itself once this access ended.
-		if ( ! empty( $grant['cleanup'] ) && 'deactivated' !== $reason && ! wp_next_scheduled( Fixpass_Plugin::SELF_REMOVE ) ) {
-			wp_schedule_single_event( time() + MINUTE_IN_SECONDS, Fixpass_Plugin::SELF_REMOVE );
-		}
 	}
 
 	/**

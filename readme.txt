@@ -22,7 +22,7 @@ Fixpass does it in a minute.
 * **Automatic context capture.** Fixpass reads your site's details for you: WordPress, PHP and database versions, configuration, Site Health results, every plugin and theme with versions and waiting updates, must-use plugins and drop-ins. You just add a sentence about what's wrong.
 * **Copy support details.** Copy the full message (login link, your description and the captured details, formatted for email and as plain text) or just the login link. You can open a preview of exactly what the full message contains before you send it.
 * **Support dashboard.** After logging in, support lands on a Support session page with your description and the site details in sections that open and close, and a button to end access.
-* **Automatic cleanup.** When access ends, by time or because you or support ended it, the support account and its sessions are deleted. Optionally, Fixpass also deactivates and deletes itself, with everything it stored.
+* **Automatic cleanup.** When access ends, by time or because you or support ended it, the support account and its sessions are deleted, and the login link and your description of the problem are removed. Nothing is left behind.
 
 = Multisite =
 
